@@ -1,0 +1,15 @@
+err() {
+    text="⛔ Pre-commit checks failed. Please fix the issues before committing."
+    echo ""
+    printf "\033[1;31m%s\033[0m\n" "$text"
+    echo ""
+    exit 1
+}
+
+run_checks() {
+  bun run lint || err
+  bun run tsc:check || err
+  # bun run check-translations || err
+}
+
+run_checks
