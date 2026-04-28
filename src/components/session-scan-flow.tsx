@@ -152,14 +152,14 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <Card>
-        <CardHeader className="gap-3">
+      <Card className="max-sm:py-2.5">
+        <CardHeader className="gap-3 max-sm:p-2.5 max-sm:py-1">
           <div className="flex items-center justify-between gap-2">
             <CardTitle>Skanowanie tarczy</CardTitle>
-            {activeSessionId ? (
-              <Badge variant="outline">Sesja #{activeSessionId}</Badge>
-            ) : (
-              <Badge variant="secondary">Nowa sesja</Badge>
+            {activeSessionId && (
+              <Badge className="border-dashed" variant="outline">
+                Sesja #{activeSessionId}
+              </Badge>
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -184,7 +184,7 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
           </div>
         </CardHeader>
 
-        <CardContent className="flex flex-col gap-4">
+        <CardContent className="flex flex-col gap-4 max-sm:p-2">
           {currentStep === "UPLOAD" ? (
             <UploadStep
               onSessionCreated={(id) => {
@@ -195,6 +195,7 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
 
           {currentStep === "TO_CROP" && session ? (
             <CropStep
+              imageBlob={session.imageBlob}
               imageUrl={imageUrl}
               initialTargetTemplate={session.targetTemplate}
               sessionId={session.id}
@@ -203,7 +204,12 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
           ) : null}
 
           {currentStep === "TO_MARK" ? (
-            <MarkStep sessionId={session?.id} sessionStatus={session?.status} />
+            <MarkStep
+              imageUrl={imageUrl}
+              sessionId={session?.id}
+              sessionStatus={session?.status}
+              targetTemplateId={session?.targetTemplate}
+            />
           ) : null}
         </CardContent>
 

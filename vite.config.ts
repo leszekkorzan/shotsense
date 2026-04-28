@@ -26,9 +26,9 @@ export default defineConfig({
       },
 
       manifest: {
-        name: "shooting-app",
-        short_name: "shooting-app",
-        description: "shooting-app",
+        name: "ShotSense",
+        short_name: "ShotSense",
+        description: "AI Target Scoring",
         theme_color: "#ffffff",
       },
 
@@ -46,6 +46,10 @@ export default defineConfig({
       },
     }),
   ],
+  assetsInclude: ["**/*.onnx"],
+  optimizeDeps: {
+    exclude: ["onnxruntime-web"],
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),

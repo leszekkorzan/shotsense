@@ -1,6 +1,10 @@
 /** biome-ignore-all lint/correctness/noUndeclaredVariables: <-> */
-const workerInstance = new ComlinkWorker<typeof import("./worker")>(
-  new URL("./worker", import.meta.url)
+const openCvWorker = new ComlinkWorker<typeof import("./opencv")>(
+  new URL("./opencv", import.meta.url)
 );
 
-export { workerInstance };
+const mlWorker = new ComlinkWorker<typeof import("./ml")>(
+  new URL("./ml", import.meta.url)
+);
+
+export { mlWorker, openCvWorker };

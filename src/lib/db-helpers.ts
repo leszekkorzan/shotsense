@@ -24,9 +24,11 @@ export async function createSessionFromImage(imageBlob: Blob): Promise<number> {
 
 export async function advanceSessionToMark(
   sessionId: number,
-  targetTemplate: string
+  targetTemplate: string,
+  imageBlob?: Blob
 ): Promise<void> {
   await db.sessions.update(sessionId, {
+    ...(imageBlob ? { imageBlob } : {}),
     status: "TO_MARK",
     targetTemplate,
     updatedAt: new Date(),

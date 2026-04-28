@@ -7,13 +7,20 @@ import {
   useRef,
   useState,
 } from "react";
+import LoadingButton from "./common/LoadingButton";
+import { DotmSquare8 } from "./ui/dotm-square-8";
 
 export type Point = { x: number; y: number };
+
+type BoundingBox = [number, number, number, number];
 
 type PerspectiveCropProps = {
   imageUrl: string;
   confirmLabel?: string;
+  initialBoundingBox?: BoundingBox | null;
   onConfirm?: (points: Point[]) => void;
+  isLoading?: boolean;
+  isAutoDetecting?: boolean;
 };
 
 type CornerHandleProps = {
@@ -39,18 +46,36 @@ function clamp(value: number, min: number, max: number): number {
 function createInitialPoints(width: number, height: number): Point[] {
   return [
     { x: width * 0.12, y: height * 0.12 },
-    { x: width * 0.88, y: height * 0.14 },
+    { x: width * 0.88, y: height * 0.12 },
     { x: width * 0.86, y: height * 0.88 },
-    { x: width * 0.14, y: height * 0.86 },
+    { x: width * 0.12, y: height * 0.88 },
   ];
 }
 
 function createInitialNormalizedPoints(): Point[] {
   return [
     { x: 0.12, y: 0.12 },
-    { x: 0.88, y: 0.14 },
+    { x: 0.88, y: 0.12 },
     { x: 0.86, y: 0.88 },
-    { x: 0.14, y: 0.86 },
+    { x: 0.12, y: 0.88 },
+  ];
+}
+
+function bboxToPoints(
+  bbox: BoundingBox,
+  displayWidth: number,
+  displayHeight: number,
+  imageWidth: number,
+  imageHeight: number
+): Point[] {
+  const scaleX = displayWidth / imageWidth;
+  const scaleY = displayHeight / imageHeight;
+
+  return [
+    { x: bbox[0] * scaleX, y: bbox[1] * scaleY },
+    { x: bbox[2] * scaleX, y: bbox[1] * scaleY },
+    { x: bbox[2] * scaleX, y: bbox[3] * scaleY },
+    { x: bbox[0] * scaleX, y: bbox[3] * scaleY },
   ];
 }
 
@@ -106,7 +131,10 @@ function CornerHandle({
 export function PerspectiveCrop({
   imageUrl,
   confirmLabel = "Zatwierdz kadr",
+  isLoading = false,
+  initialBoundingBox,
   onConfirm,
+  isAutoDetecting = false,
 }: PerspectiveCropProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const dimmerPathRef = useRef<SVGPathElement | null>(null);
@@ -114,10 +142,35 @@ export function PerspectiveCrop({
   const handleRefs = useRef<Array<HTMLDivElement | null>>([]);
   const pointsRef = useRef<Point[]>([]);
   const normalizedPointsRef = useRef<Point[]>([]);
+  const lastAppliedBoundingBoxRef = useRef<BoundingBox | null>(null);
   const frameRef = useRef<number | null>(null);
 
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [points, setPoints] = useState<Point[]>([]);
+  const [imageMetrics, setImageMetrics] = useState({
+    height: 0,
+    width: 0,
+    loaded: false,
+  });
+  useEffect(() => {
+    if (!imageUrl) {
+      return;
+    }
+
+    const image = new Image();
+    image.onload = () => {
+      setImageMetrics({
+        height: image.naturalHeight,
+        loaded: true,
+        width: image.naturalWidth,
+      });
+    };
+    image.src = imageUrl;
+
+    return () => {
+      image.onload = null;
+    };
+  }, [imageUrl]);
 
   const syncDom = useCallback(() => {
     frameRef.current = null;
@@ -206,6 +259,34 @@ export function PerspectiveCrop({
       return;
     }
 
+    if (
+      initialBoundingBox &&
+      imageMetrics.loaded &&
+      imageMetrics.width > 0 &&
+      imageMetrics.height > 0 &&
+      lastAppliedBoundingBoxRef.current !== initialBoundingBox
+    ) {
+      lastAppliedBoundingBoxRef.current = initialBoundingBox;
+      normalizedPointsRef.current = bboxToPoints(
+        initialBoundingBox,
+        size.width,
+        size.height,
+        imageMetrics.width,
+        imageMetrics.height
+      ).map((point) => ({
+        x: point.x / size.width,
+        y: point.y / size.height,
+      }));
+
+      setPoints(
+        normalizedPointsRef.current.map((point) => ({
+          x: clamp(point.x * size.width, 0, size.width),
+          y: clamp(point.y * size.height, 0, size.height),
+        }))
+      );
+      return;
+    }
+
     if (normalizedPointsRef.current.length !== 4) {
       normalizedPointsRef.current = createInitialNormalizedPoints();
       setPoints(createInitialPoints(size.width, size.height));
@@ -218,7 +299,14 @@ export function PerspectiveCrop({
         y: clamp(point.y * size.height, 0, size.height),
       }))
     );
-  }, [size.height, size.width]);
+  }, [
+    imageMetrics.height,
+    imageMetrics.loaded,
+    imageMetrics.width,
+    initialBoundingBox,
+    size.height,
+    size.width,
+  ]);
 
   useEffect(() => {
     if (points.length !== 4) {
@@ -280,20 +368,44 @@ export function PerspectiveCrop({
 
   const handleConfirm = useCallback(() => {
     const result = pointsRef.current.map((point) => ({ ...point }));
+    const scaleX =
+      size.width > 0 && imageMetrics.width > 0
+        ? imageMetrics.width / size.width
+        : 1;
+    const scaleY =
+      size.height > 0 && imageMetrics.height > 0
+        ? imageMetrics.height / size.height
+        : 1;
+    const imageSpaceResult = result.map((point) => ({
+      x: point.x * scaleX,
+      y: point.y * scaleY,
+    }));
+
     if (onConfirm) {
-      onConfirm(result);
+      onConfirm(imageSpaceResult);
       return;
     }
 
-    console.log("Perspective crop points:", result);
-  }, [onConfirm]);
+    console.log("Perspective crop points:", imageSpaceResult);
+  }, [
+    imageMetrics.height,
+    imageMetrics.width,
+    onConfirm,
+    size.height,
+    size.width,
+  ]);
 
   return (
     <div className="flex w-full flex-col gap-4">
       <div
-        className="relative mx-auto w-full max-w-xl touch-none select-none overflow-hidden rounded-xl border border-border bg-black"
+        className="relative mx-auto max-h-fit w-full max-w-2xl touch-none select-none overflow-hidden rounded-xl border border-border bg-black"
         ref={stageRef}
       >
+        {isAutoDetecting && (
+          <div className="o absolute top-0 left-0 z-20 m-5 max-sm:m-2">
+            <DotmSquare8 color="white" opacityBase={0.2} pattern="diamond" />
+          </div>
+        )}
         {/** biome-ignore lint/correctness/useImageSize: <-> */}
         <img
           alt="Crop target"
@@ -335,13 +447,9 @@ export function PerspectiveCrop({
         )}
       </div>
 
-      <button
-        className="inline-flex h-10 w-full items-center justify-center rounded-md border border-transparent bg-primary px-4 font-medium text-primary-foreground text-sm transition hover:bg-primary/90 active:translate-y-px"
-        onClick={handleConfirm}
-        type="button"
-      >
+      <LoadingButton loading={isLoading} onClick={handleConfirm} type="button">
         {confirmLabel}
-      </button>
+      </LoadingButton>
     </div>
   );
 }
