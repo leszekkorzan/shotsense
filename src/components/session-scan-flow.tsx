@@ -22,7 +22,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cancelSession, getSessionById } from "@/lib/db-helpers";
+import {
+  cancelSession,
+  getSessionById,
+  getSessionFileBySessionId,
+} from "@/lib/db-helpers";
 import LoadingButton from "./common/LoadingButton";
 import { Spinner } from "./ui/spinner";
 
@@ -67,21 +71,33 @@ export function SessionScanFlow({
     undefined
   );
 
+  const sessionFile = useLiveQuery(
+    () => {
+      if (!activeSessionId) {
+        return;
+      }
+
+      return getSessionFileBySessionId(activeSessionId);
+    },
+    [activeSessionId],
+    undefined
+  );
+
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session?.imageBlob) {
+    if (!sessionFile?.imageBlob) {
       setImageUrl(null);
       return;
     }
 
-    const url = URL.createObjectURL(session.imageBlob);
+    const url = URL.createObjectURL(sessionFile.imageBlob);
     setImageUrl(url);
 
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [session?.imageBlob]);
+  }, [sessionFile?.imageBlob]);
 
   const currentStep: FlowStep = useMemo(() => {
     if (!activeSessionId) {
@@ -131,12 +147,22 @@ export function SessionScanFlow({
     }
   };
 
-  if (activeSessionId && !session) {
-    return (
-      <Card className="flex items-center justify-center">
-        <Spinner />
-      </Card>
-    );
+  if (activeSessionId) {
+    if (session === undefined || sessionFile === undefined) {
+      return (
+        <Card className="flex items-center justify-center">
+          <Spinner />
+        </Card>
+      );
+    }
+
+    if (!(session && sessionFile)) {
+      return (
+        <Card className="flex items-center justify-center p-8">
+          <CardTitle>Brak danych sesji</CardTitle>
+        </Card>
+      );
+    }
   }
 
   if (currentStep === "COMPLETED") {
@@ -219,9 +245,9 @@ export function SessionScanFlow({
             />
           ) : null}
 
-          {currentStep === "TO_CROP" && session ? (
+          {currentStep === "TO_CROP" && session && sessionFile ? (
             <CropStep
-              imageBlob={session.imageBlob}
+              imageBlob={sessionFile.imageBlob}
               imageUrl={imageUrl}
               initialTargetTemplate={session.targetTemplate}
               sessionId={session.id}

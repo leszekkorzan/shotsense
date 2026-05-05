@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { type Shot as DbShot, db, type Session } from "@/lib/db";
-import { cancelSession } from "@/lib/db-helpers";
+import { cancelSession, getSessionFileBySessionId } from "@/lib/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,
@@ -33,9 +33,11 @@ export const Route = createFileRoute("/session/$id")({
 
 function CompletedSessionView({
   session,
+  imageBlob,
   dbShots,
 }: {
   session: Session;
+  imageBlob: Blob;
   dbShots: DbShot[];
 }) {
   const navigate = useNavigate();
@@ -81,18 +83,13 @@ function CompletedSessionView({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session.imageBlob) {
-      setImageUrl(null);
-      return;
-    }
-
-    const url = URL.createObjectURL(session.imageBlob);
+    const url = URL.createObjectURL(imageBlob);
     setImageUrl(url);
 
     return () => {
       URL.revokeObjectURL(url);
     };
-  }, [session.imageBlob]);
+  }, [imageBlob]);
 
   const editorShots: EditorShot[] = useMemo(() => {
     if (!template) {
@@ -213,7 +210,13 @@ function SessionRoute() {
     null
   );
 
-  if (session === null || shots === null) {
+  const sessionFile = useLiveQuery(
+    () => getSessionFileBySessionId(sessionId),
+    [sessionId],
+    null
+  );
+
+  if (session === null || shots === null || sessionFile === null) {
     return (
       <Card>
         <Card className="flex items-center justify-center p-8">
@@ -236,8 +239,27 @@ function SessionRoute() {
     );
   }
 
+  if (!sessionFile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Brak pliku sesji</CardTitle>
+          <CardDescription>
+            Nie znaleziono obrazu przypisanego do tej sesji.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   if (session.status === "COMPLETED") {
-    return <CompletedSessionView dbShots={shots} session={session} />;
+    return (
+      <CompletedSessionView
+        dbShots={shots}
+        imageBlob={sessionFile.imageBlob}
+        session={session}
+      />
+    );
   }
 
   return <SessionScanFlow existingSession sessionId={sessionId} />;
