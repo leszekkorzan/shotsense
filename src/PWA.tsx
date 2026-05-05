@@ -30,15 +30,15 @@ function PWA() {
       if (r?.active?.state === "activated") {
         registerPeriodicSync(period, swUrl, r);
       } else if (r?.installing) {
+        toastRef.current = toast.loading("Wczytywanie aplikacji...", {
+          id: toastRef.current,
+        });
+
         r.installing.addEventListener("statechange", (e) => {
           const sw = e.target as ServiceWorker;
           if (sw.state === "activated") {
             toast.dismiss(toastRef.current);
             registerPeriodicSync(period, swUrl, r);
-          } else if (sw.state === "installing" || sw.state === "activating") {
-            toastRef.current = toast.loading("Wczytywanie aplikacji...", {
-              id: toastRef.current,
-            });
           }
         });
       }
