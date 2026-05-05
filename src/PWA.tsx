@@ -1,6 +1,7 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { CircleFadingArrowUp, CloudCheck } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,7 +16,8 @@ import { Button } from "./components/ui/button";
 
 function PWA() {
   const period = 60 * 60 * 1000; // 1h
-
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const toastRef = useRef<string | number | undefined>(undefined);
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -31,7 +33,12 @@ function PWA() {
         r.installing.addEventListener("statechange", (e) => {
           const sw = e.target as ServiceWorker;
           if (sw.state === "activated") {
+            toast.dismiss(toastRef.current);
             registerPeriodicSync(period, swUrl, r);
+          } else if (sw.state === "installing" || sw.state === "activating") {
+            toastRef.current = toast.loading("Wczytywanie aplikacji...", {
+              id: toastRef.current,
+            });
           }
         });
       }
@@ -42,8 +49,6 @@ function PWA() {
     setOfflineReady(false);
     setNeedRefresh(false);
   }
-
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   function handleRefresh() {
     setIsRefreshing(true);

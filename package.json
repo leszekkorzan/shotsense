@@ -48,7 +48,8 @@
   "name": "shotsense",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "copy-onnx-wasm": "mkdir -p public/ort && cp node_modules/onnxruntime-web/dist/*.wasm public/ort/",
+    "build": "npm run copy-onnx-wasm && tsc -b && vite build",
     "preview": "vite preview",
     "lint": "ultracite check",
     "fix": "ultracite fix",
