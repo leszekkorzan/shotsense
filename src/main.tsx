@@ -4,7 +4,9 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 
 import { AlertDialogProvider } from "./components/contexts/DialogProvider";
+import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
+import PWA from "./PWA";
 import { routeTree } from "./routeTree.gen";
 
 const router = createRouter({ routeTree });
@@ -24,6 +26,8 @@ if (!rootElement.innerHTML) {
       <TooltipProvider>
         <AlertDialogProvider>
           <RouterProvider router={router} />
+          <PWA />
+          <Toaster />
         </AlertDialogProvider>
       </TooltipProvider>
     </StrictMode>

@@ -1,6 +1,13 @@
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { CheckIcon } from "lucide-react";
+import {
+  CheckIcon,
+  CircleCheckBig,
+  ScanEyeIcon,
+  ScanSearch,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useConfirm } from "@/components/contexts/DialogProvider";
 import { CropStep } from "@/components/session-scan-steps/crop-step";
 import { MarkStep } from "@/components/session-scan-steps/mark-step";
@@ -17,9 +24,11 @@ import {
 } from "@/components/ui/card";
 import { cancelSession, getSessionById } from "@/lib/db-helpers";
 import LoadingButton from "./common/LoadingButton";
+import { Spinner } from "./ui/spinner";
 
 type SessionScanFlowProps = {
   sessionId?: number;
+  existingSession?: boolean;
 };
 
 const steps = [
@@ -30,7 +39,12 @@ const steps = [
 
 type FlowStep = (typeof steps)[number]["id"] | "COMPLETED";
 
-export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
+export function SessionScanFlow({
+  sessionId,
+  existingSession,
+}: SessionScanFlowProps) {
+  const navigate = useNavigate();
+
   const [activeSessionId, setActiveSessionId] = useState<number | undefined>(
     sessionId
   );
@@ -53,22 +67,21 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
     undefined
   );
 
-  const imageUrl = useMemo(() => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
     if (!session?.imageBlob) {
-      return null;
+      setImageUrl(null);
+      return;
     }
 
-    return URL.createObjectURL(session.imageBlob);
-  }, [session?.imageBlob]);
+    const url = URL.createObjectURL(session.imageBlob);
+    setImageUrl(url);
 
-  useEffect(
-    () => () => {
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
-    },
-    [imageUrl]
-  );
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [session?.imageBlob]);
 
   const currentStep: FlowStep = useMemo(() => {
     if (!activeSessionId) {
@@ -104,6 +117,11 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
 
     try {
       await cancelSession(sessionIdToCancel);
+      toast.success("Skanowanie zostało anulowane");
+
+      if (existingSession) {
+        navigate({ to: "/sessions" });
+      }
 
       setActiveSessionId(undefined);
     } catch (error: unknown) {
@@ -115,13 +133,8 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
 
   if (activeSessionId && !session) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>TODO: Ladowanie sesji</CardTitle>
-          <CardDescription>
-            Pobieram zapisane dane z pamieci lokalnej.
-          </CardDescription>
-        </CardHeader>
+      <Card className="flex items-center justify-center">
+        <Spinner />
       </Card>
     );
   }
@@ -130,12 +143,15 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Sesja zakonczona</CardTitle>
+          <CardTitle className="mb-2 flex gap-2">
+            <CircleCheckBig size={21} />
+            Sesja zakończona
+          </CardTitle>
           <CardDescription>
-            Ta sesja jest juz zakonczona. Mozesz rozpoczec kolejne skanowanie.
+            Wszystkie kroki zostały ukończone. Sesja zapisana.
           </CardDescription>
         </CardHeader>
-        <CardFooter>
+        <CardFooter className="flex gap-2">
           <Button
             onClick={() => {
               setActiveSessionId(undefined);
@@ -143,8 +159,18 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
             type="button"
             variant="outline"
           >
+            <ScanSearch />
             Nowa sesja
           </Button>
+          <Link
+            params={{ id: activeSessionId as unknown as string }}
+            to="/session/$id"
+          >
+            <Button variant="outline">
+              <ScanEyeIcon />
+              Zobacz sesję
+            </Button>
+          </Link>
         </CardFooter>
       </Card>
     );
@@ -214,8 +240,9 @@ export function SessionScanFlow({ sessionId }: SessionScanFlowProps) {
         </CardContent>
 
         {activeSessionId ? (
-          <CardFooter className="justify-end">
+          <CardFooter className="justify-end max-sm:p-2 max-sm:py-0">
             <LoadingButton
+              className="text-slate-600"
               loading={isCancelling}
               onClick={handleCancelScan}
               size="xs"

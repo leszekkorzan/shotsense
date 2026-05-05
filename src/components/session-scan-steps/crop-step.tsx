@@ -1,6 +1,10 @@
 import { Edit2Icon, TargetIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { PerspectiveCrop, type Point } from "@/components/PerspectiveCrop";
+import { toast } from "sonner";
+import {
+  PerspectiveCrop,
+  type Point,
+} from "@/components/common/PerspectiveCrop";
 import { Button } from "@/components/ui/button";
 import type { SessionStatus } from "@/lib/db";
 import { advanceSessionToMark } from "@/lib/db-helpers";
@@ -124,7 +128,7 @@ export function CropStep({
         }
       })
       .catch((error: unknown) => {
-        console.error("Nie udalo sie zaladowac szablonu tarczy", error);
+        console.error("Error occurred while loading target template", error);
 
         if (!cancelled) {
           setLoadedTemplate(null);
@@ -200,7 +204,7 @@ export function CropStep({
       setPreviewBlob(warpedImageBlob);
       setStep("adjust");
     } catch (error: unknown) {
-      console.error("Nie udalo sie zapisac kadru", error);
+      console.error("Error occurred while processing image", error);
     } finally {
       setIsSaving(false);
     }
@@ -218,10 +222,16 @@ export function CropStep({
       if (detection) {
         setDetectedBoundingBox(detection.bbox);
       } else {
+        toast.error("Nie udało się automatycznie wykryć tarczy.");
         setDetectedBoundingBox(null);
       }
     } catch (error: unknown) {
-      console.error("Nie udało się wykryć tarczy", error);
+      console.error("Error occurred while detecting target", error);
+      toast.error(
+        "Wystąpił błąd podczas wykrywania tarczy: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+
       setDetectedBoundingBox(null);
     } finally {
       setIsDetecting(false);
@@ -246,7 +256,7 @@ export function CropStep({
         alignedBlob
       );
     } catch (error: unknown) {
-      console.error("Nie udalo sie zapisac dopasowanej tarczy", error);
+      console.error("Error occurred while saving aligned target", error);
     } finally {
       setIsSaving(false);
     }

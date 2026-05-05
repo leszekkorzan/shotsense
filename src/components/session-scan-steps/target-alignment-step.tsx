@@ -150,8 +150,6 @@ export function TargetAlignmentStep({
     setRotation(0);
   }, [imageBlob]);
 
-  // No drag gestures: simplified control via +/- buttons only (horizontal/vertical)
-
   const bindPan = useDrag(
     ({ movement: [mx, my], memo }) => {
       if (isSaving || editMode !== "move" || isMobile) {
@@ -184,14 +182,12 @@ export function TargetAlignmentStep({
     }
   );
 
-  // Repeat/hold logic for +/- buttons
   const repeatRef = useRef<number | null>(null);
   const repeatDelayRef = useRef<number | null>(null);
   const REPEAT_DELAY = 350; // ms before continuous repeat starts
   const REPEAT_INTERVAL = 120; // ms between repeats
 
   const startRepeat = (action: () => void) => {
-    // start a timeout; if the user releases before it fires, only onClick will apply single step
     stopRepeat();
     repeatDelayRef.current = window.setTimeout(() => {
       repeatRef.current = window.setInterval(action, REPEAT_INTERVAL);
@@ -366,7 +362,7 @@ export function TargetAlignmentStep({
     },
     {
       key: "rotate-ccw-square",
-      label: "Obróć w lewo o 90°",
+      label: "Obróć w lewo o 90",
       delta: -QUARTER_TURN,
       repeat: false,
       positionStyle: { bottom: 12, left: 12 },
@@ -374,7 +370,7 @@ export function TargetAlignmentStep({
     },
     {
       key: "rotate-cw-square",
-      label: "Obróć w prawo o 90°",
+      label: "Obróć w prawo o 90",
       delta: QUARTER_TURN,
       repeat: false,
       positionStyle: { bottom: 12, right: 12 },
@@ -410,7 +406,7 @@ export function TargetAlignmentStep({
       );
       await onConfirm(alignedBlob);
     } catch (error: unknown) {
-      console.error("Nie udalo sie zapisac dopasowanej tarczy", error);
+      console.error("Error during aligned blob processing", error);
     } finally {
       setIsSaving(false);
     }
@@ -449,7 +445,7 @@ export function TargetAlignmentStep({
 
       <div
         {...bindPan()}
-        className="relative mx-auto aspect-square w-full max-w-2xl touch-none select-none overflow-hidden rounded-xl border border-border bg-black"
+        className="relative mx-auto aspect-square w-full max-w-2xl select-none overflow-hidden rounded-xl border border-border bg-black"
         ref={viewportRef}
       >
         {/** biome-ignore lint/correctness/useImageSize: <- */}
@@ -507,7 +503,7 @@ export function TargetAlignmentStep({
           disabled={isSaving}
           onClick={() => {
             handleCommit().catch((error: unknown) => {
-              console.error("Nie udalo sie zapisac dopasowanej tarczy", error);
+              console.error("Error during aligned blob processing", error);
             });
           }}
           type="button"

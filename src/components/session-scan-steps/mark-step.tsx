@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import TargetOverlay from "@/components/common/TargetOverlay";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { SessionStatus } from "@/lib/db";
 import { completeSession } from "@/lib/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,
 } from "@/lib/targets/target-templates";
+import LoadingButton from "../common/LoadingButton";
+import { type Shot, ShotMarkerEditor } from "../common/ShotMarkerEditor";
 
 type MarkStepProps = {
   imageUrl?: string | null;
@@ -23,6 +24,7 @@ export function MarkStep({
 }: MarkStepProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [template, setTemplate] = useState<TargetTemplate | null>(null);
+  const [shots, setShots] = useState<Shot[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +51,7 @@ export function MarkStep({
         }
       })
       .catch((error: unknown) => {
-        console.error("Nie udalo sie zaladowac szablonu tarczy", error);
+        console.error("Error occurred while loading target template", error);
 
         if (!cancelled) {
           setTemplate(null);
@@ -69,51 +71,53 @@ export function MarkStep({
     setIsSaving(true);
 
     try {
-      await completeSession(sessionId);
+      const shotPayloads = shots.map((shot) => {
+        let score = 0;
+        if (template && shot.ringIndex !== undefined && shot.ringIndex !== -1) {
+          score = template.rings[shot.ringIndex]?.score ?? 0;
+        }
+
+        return {
+          nx: shot.nx,
+          ny: shot.ny,
+          score,
+          isManual: shot.isManual ?? false,
+        };
+      });
+      await completeSession(sessionId, shotPayloads);
     } catch (error: unknown) {
-      console.error("Nie udalo sie zakonczyc sesji", error);
+      console.error("Error occurred while completing session", error);
+      toast.error(
+        "Wystąpił błąd podczas zapisywania strzałów. Proszę spróbować ponownie."
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 p-4">
-      <p className="font-medium text-sm">Krok: oznaczanie strzalow</p>
+    <div className="flex flex-col gap-4">
       {imageUrl ? (
-        <div className="relative overflow-hidden rounded-lg border border-border bg-black">
-          <img
-            alt="Wyprostowany obraz tarczy"
-            className="block h-auto w-full"
-            height={1000}
-            src={imageUrl}
-            width={1000}
-          />
-
-          {template ? (
-            <TargetOverlay
-              className="absolute inset-0 h-full w-full"
-              template={template}
-              variant="outline"
-            />
-          ) : null}
-        </div>
+        <ShotMarkerEditor
+          imageUrl={imageUrl}
+          onShotsChange={setShots}
+          shots={shots}
+          template={template}
+        />
       ) : (
         <p className="text-muted-foreground text-sm">
           Brak obrazu do wyswietlenia.
         </p>
       )}
-      <Button
-        disabled={isSaving}
-        onClick={() => {
-          handleComplete().catch((error: unknown) => {
-            console.error("Nie udalo sie zakonczyc sesji", error);
-          });
-        }}
+      <LoadingButton
+        className="w-full"
+        disabled={!(imageUrl && template) || shots.length === 0}
+        loading={isSaving}
+        onClick={handleComplete}
         type="button"
       >
-        Zakoncz
-      </Button>
+        Zakończ
+      </LoadingButton>
     </div>
   );
 }

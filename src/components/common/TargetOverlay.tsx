@@ -55,7 +55,6 @@ const TargetOverlay: React.FC<TargetOverlayProps> = ({
           );
         }
 
-        // solid variant: decide whether ring sits inside the 'anchor' (black field)
         const inAnchor = ring.diameter_mm <= template.anchor_diameter_mm;
         const fill = inAnchor ? "#222" : "#FFF";
         const stroke = inAnchor ? "#FFF" : "#222";

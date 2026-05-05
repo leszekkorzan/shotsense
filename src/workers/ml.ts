@@ -1,10 +1,18 @@
 import { InferenceSession, Tensor } from "onnxruntime-web";
 
-const models = ["shotsense-contour-v1.onnx"] as const;
+const models = [
+  "shotsense-contour-v1.onnx",
+  "shotsense-holes-v1.onnx",
+] as const;
 const modelConfigs = {
   "shotsense-contour-v1.onnx": {
     inputSize: 640,
     classes: { 0: "black_contour", 1: "target" },
+    confidenceThreshold: 0.25,
+  },
+  "shotsense-holes-v1.onnx": {
+    inputSize: 640,
+    classes: { 0: "hole" },
     confidenceThreshold: 0.25,
   },
 } as const satisfies Record<
@@ -27,6 +35,11 @@ export type YoloDetection = {
 
 export type BlackContourDetection = YoloDetection & {
   imageSize: [number, number];
+};
+
+export type HoleDetection = YoloDetection & {
+  imageSize: [number, number];
+  point: [number, number];
 };
 
 function getModelUrl(modelName: (typeof models)[number]): string {
@@ -290,6 +303,65 @@ export async function detectBlackContour(
       bbox: imageBBox,
       imageSize: [imageBitmap.width, imageBitmap.height],
     };
+  } finally {
+    imageBitmap.close();
+  }
+}
+
+export async function detectHoles(image: ImageInput): Promise<HoleDetection[]> {
+  const modelName = "shotsense-holes-v1.onnx";
+  const session = await getSession(modelName);
+  const inputName = getModelInputName(session);
+  const inputSize = getModelInputSize(modelName);
+
+  const imageBitmap = await resolveImageBitmap(image);
+  try {
+    const { scale, tensor, offsetX, offsetY } = preprocessImage(
+      imageBitmap,
+      inputSize,
+      inputSize
+    );
+    const outputs = await session.run({ [inputName]: tensor });
+    const outputName = session.outputNames[0];
+
+    if (!outputName) {
+      throw new Error("Model does not expose any outputs");
+    }
+
+    const output = outputs[outputName];
+
+    if (!output) {
+      throw new Error(`Missing output tensor ${outputName}`);
+    }
+
+    const detections = parseYolo26Output(output, modelName);
+
+    return detections
+      .filter((d) => d.classId === 0)
+      .map((detection) => {
+        const [x1, y1, x2, y2] = detection.bbox;
+        const imageBBox = clampBBox(
+          [
+            (x1 - offsetX) / scale,
+            (y1 - offsetY) / scale,
+            (x2 - offsetX) / scale,
+            (y2 - offsetY) / scale,
+          ],
+          imageBitmap.width,
+          imageBitmap.height
+        );
+        const point: [number, number] = [
+          (imageBBox[0] + imageBBox[2]) / 2,
+          (imageBBox[1] + imageBBox[3]) / 2,
+        ];
+
+        return {
+          ...detection,
+          bbox: imageBBox,
+          imageSize: [imageBitmap.width, imageBitmap.height],
+          point,
+        };
+      });
   } finally {
     imageBitmap.close();
   }

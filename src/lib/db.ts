@@ -7,8 +7,11 @@ export interface Session {
   id?: number;
   imageBlob: Blob;
 
+  score?: number;
+  shootsCount?: number;
+
   status: SessionStatus;
-  targetTemplate?: string; // np. "BUILT_IN_TS4", "BUILT_IN_NT23"
+  targetTemplate?: string;
   updatedAt: Date;
 }
 
@@ -17,12 +20,10 @@ export interface Shot {
   id?: number;
 
   isManual: boolean;
-  radius: number; // Wyliczony z Bounding Boxa YOLO np. (x2 - x1) / 2 * 1000
-  score: number; // Wartość punktowa
+  nx: number;
+  ny: number;
+  score: number;
   sessionId: number;
-
-  x: number;
-  y: number;
 }
 
 export const db = new Dexie("shooting-app-db") as Dexie & {

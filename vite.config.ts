@@ -34,12 +34,13 @@ export default defineConfig({
 
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico}"],
+        maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
       },
 
       devOptions: {
-        enabled: false,
+        enabled: process.env.NODE_ENV === "development",
         navigateFallback: "index.html",
         suppressWarnings: true,
         type: "module",
