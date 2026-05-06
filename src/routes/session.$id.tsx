@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useLiveQuery } from "dexie-react-hooks";
-import { Calculator, Target, Trash2 } from "lucide-react";
+import { ArrowLeft, Calculator, Target, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -30,6 +30,27 @@ import {
 export const Route = createFileRoute("/session/$id")({
   component: SessionRoute,
 });
+
+function BackButton() {
+  const navigate = useNavigate();
+
+  return (
+    <Button
+      className="self-start"
+      onClick={() => navigate({ to: "/sessions" })}
+      size="sm"
+      style={{
+        height: "2rem",
+        paddingLeft: "0.75rem",
+        paddingRight: "0.75rem",
+      }}
+      variant="ghost"
+    >
+      <ArrowLeft className="mr-2 size-4" />
+      Cofnij
+    </Button>
+  );
+}
 
 function CompletedSessionView({
   session,
@@ -126,15 +147,19 @@ function CompletedSessionView({
 
   if (!(imageUrl && template)) {
     return (
-      <Card className="flex items-center justify-center p-8">
-        <Spinner />
-      </Card>
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+        <BackButton />
+        <Card className="flex items-center justify-center p-8">
+          <Spinner />
+        </Card>
+      </section>
     );
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <Card className="max-sm:py-2.5">
+    <section className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+      <BackButton />
+      <Card className="max-sm:py-1">
         <CardHeader className="gap-3 max-sm:p-4 max-sm:py-3">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="flex items-center gap-2">
@@ -161,7 +186,7 @@ function CompletedSessionView({
             />
           </div>
         </CardContent>
-        <CardFooter className="justify-end">
+        <CardFooter className="justify-end max-md:px-2">
           <Button
             disabled={isDeleting}
             onClick={async () => {
@@ -218,37 +243,44 @@ function SessionRoute() {
 
   if (session === null || shots === null || sessionFile === null) {
     return (
-      <Card>
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+        <BackButton />
         <Card className="flex items-center justify-center p-8">
           <Spinner />
         </Card>
-      </Card>
+      </section>
     );
   }
 
   if (!session) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Sesja nie istnieje</CardTitle>
-          <CardDescription>
-            Nie znaleziono rekordu o podanym identyfikatorze.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+        <BackButton />
+        <Card>
+          <CardHeader>
+            <CardTitle>Sesja nie istnieje</CardTitle>
+            <CardDescription>
+              Nie znaleziono rekordu o podanym identyfikatorze.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
     );
   }
 
   if (!sessionFile) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Brak pliku sesji</CardTitle>
-          <CardDescription>
-            Nie znaleziono obrazu przypisanego do tej sesji.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+        <BackButton />
+        <Card>
+          <CardHeader>
+            <CardTitle>Brak pliku sesji</CardTitle>
+            <CardDescription>
+              Nie znaleziono obrazu przypisanego do tej sesji.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </section>
     );
   }
 

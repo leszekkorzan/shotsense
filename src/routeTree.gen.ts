@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as HeatmapsRouteImport } from './routes/heatmaps'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionIdRouteImport } from './routes/session.$id'
+import { Route as HeatmapTemplateIdRouteImport } from './routes/heatmap.$templateId'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -30,6 +32,11 @@ const ScanRoute = ScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HeatmapsRoute = HeatmapsRouteImport.update({
+  id: '/heatmaps',
+  path: '/heatmaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -40,42 +47,77 @@ const SessionIdRoute = SessionIdRouteImport.update({
   path: '/session/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HeatmapTemplateIdRoute = HeatmapTemplateIdRouteImport.update({
+  id: '/heatmap/$templateId',
+  path: '/heatmap/$templateId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/heatmaps': typeof HeatmapsRoute
   '/scan': typeof ScanRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/heatmap/$templateId': typeof HeatmapTemplateIdRoute
   '/session/$id': typeof SessionIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/heatmaps': typeof HeatmapsRoute
   '/scan': typeof ScanRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/heatmap/$templateId': typeof HeatmapTemplateIdRoute
   '/session/$id': typeof SessionIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/heatmaps': typeof HeatmapsRoute
   '/scan': typeof ScanRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/heatmap/$templateId': typeof HeatmapTemplateIdRoute
   '/session/$id': typeof SessionIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/scan' | '/sessions' | '/settings' | '/session/$id'
+  fullPaths:
+    | '/'
+    | '/heatmaps'
+    | '/scan'
+    | '/sessions'
+    | '/settings'
+    | '/heatmap/$templateId'
+    | '/session/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/scan' | '/sessions' | '/settings' | '/session/$id'
-  id: '__root__' | '/' | '/scan' | '/sessions' | '/settings' | '/session/$id'
+  to:
+    | '/'
+    | '/heatmaps'
+    | '/scan'
+    | '/sessions'
+    | '/settings'
+    | '/heatmap/$templateId'
+    | '/session/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/heatmaps'
+    | '/scan'
+    | '/sessions'
+    | '/settings'
+    | '/heatmap/$templateId'
+    | '/session/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  HeatmapsRoute: typeof HeatmapsRoute
   ScanRoute: typeof ScanRoute
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
+  HeatmapTemplateIdRoute: typeof HeatmapTemplateIdRoute
   SessionIdRoute: typeof SessionIdRoute
 }
 
@@ -102,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/heatmaps': {
+      id: '/heatmaps'
+      path: '/heatmaps'
+      fullPath: '/heatmaps'
+      preLoaderRoute: typeof HeatmapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -116,14 +165,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/heatmap/$templateId': {
+      id: '/heatmap/$templateId'
+      path: '/heatmap/$templateId'
+      fullPath: '/heatmap/$templateId'
+      preLoaderRoute: typeof HeatmapTemplateIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  HeatmapsRoute: HeatmapsRoute,
   ScanRoute: ScanRoute,
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
+  HeatmapTemplateIdRoute: HeatmapTemplateIdRoute,
   SessionIdRoute: SessionIdRoute,
 }
 export const routeTree = rootRouteImport

@@ -3,4 +3,6 @@ export const getPageTitleMapper = () => ({
   sessions: "Sesje",
   session: "Sesja",
   settings: "Ustawienia",
+  heatmaps: "Heatmapy",
+  heatmap: "Heatmapa",
 });

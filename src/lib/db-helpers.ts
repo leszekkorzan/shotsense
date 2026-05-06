@@ -1,4 +1,9 @@
-import { db, type Session, type SessionFile } from "@/lib/db";
+import {
+  type Shot as DbShot,
+  db,
+  type Session,
+  type SessionFile,
+} from "@/lib/db";
 
 export const SESSIONS_PAGE_SIZE = 15;
 
@@ -146,4 +151,87 @@ export async function clearAllData(confirm: "DELETE") {
     throw new Error("Confirmation text does not match");
   }
   return await db.delete({ disableAutoOpen: false });
+}
+
+export interface TargetHeatmapInfo {
+  lastSessionDate: Date;
+  sessionCount: number;
+  shotCount: number;
+  targetTemplate: string;
+  title: string;
+}
+
+export async function getTargetsWithSessions(): Promise<TargetHeatmapInfo[]> {
+  const completedSessions = await db.sessions
+    .where("status")
+    .equals("COMPLETED")
+    .toArray();
+
+  const sessionToTarget = new Map<number, TargetHeatmapInfo>();
+  const targetMap = new Map<string, TargetHeatmapInfo>();
+
+  for (const session of completedSessions) {
+    if (!session.targetTemplate) {
+      continue;
+    }
+
+    const existing = targetMap.get(session.targetTemplate);
+    let target: TargetHeatmapInfo;
+
+    if (existing) {
+      target = existing;
+      target.sessionCount++;
+      target.lastSessionDate = new Date(
+        Math.max(target.lastSessionDate.getTime(), session.createdAt.getTime())
+      );
+    } else {
+      target = {
+        targetTemplate: session.targetTemplate,
+        title: session.targetTemplate,
+        sessionCount: 1,
+        shotCount: 0,
+        lastSessionDate: session.createdAt,
+      };
+      targetMap.set(session.targetTemplate, target);
+    }
+
+    sessionToTarget.set(session.id as number, target);
+  }
+
+  if (sessionToTarget.size > 0) {
+    const allShots = await db.shots
+      .where("sessionId")
+      .anyOf(Array.from(sessionToTarget.keys()))
+      .toArray();
+
+    for (const shot of allShots) {
+      const target = sessionToTarget.get(shot.sessionId);
+      if (target) {
+        target.shotCount++;
+      }
+    }
+  }
+
+  return Array.from(targetMap.values()).sort(
+    (a, b) => b.lastSessionDate.getTime() - a.lastSessionDate.getTime()
+  );
+}
+
+export async function getShotsForTarget(
+  targetTemplate: string
+): Promise<(DbShot & { sessionId: number })[]> {
+  const sessions = await db.sessions
+    .where("targetTemplate")
+    .equals(targetTemplate)
+    .and((s) => s.status === "COMPLETED")
+    .toArray();
+
+  if (sessions.length === 0) {
+    return [];
+  }
+
+  const sessionIds = sessions.map((s) => s.id as number);
+  const shots = await db.shots.where("sessionId").anyOf(sessionIds).toArray();
+
+  return shots;
 }

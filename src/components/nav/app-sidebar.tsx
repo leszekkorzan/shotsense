@@ -1,6 +1,6 @@
 "use client";
 
-import { BookCheck, Scan, Settings2Icon } from "lucide-react";
+import { BookCheck, Flame, Scan, Settings2Icon } from "lucide-react";
 import type * as React from "react";
 import { NavMain } from "@/components/nav/nav-main";
 import { NavUser } from "@/components/nav/nav-user";
@@ -31,6 +31,11 @@ const data = {
       title: "Twoje sesje",
       url: "/sessions",
       icon: <BookCheck />,
+    },
+    {
+      title: "Heatmapy",
+      url: "/heatmaps",
+      icon: <Flame />,
     },
     {
       title: "Ustawienia",
