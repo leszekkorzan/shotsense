@@ -151,7 +151,9 @@ export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
               {status.offlineReady ? <CircleCheck /> : <WifiOff />}
             </ItemMedia>
             <ItemContent>
-              <ItemTitle>Gotowa do pracy offline</ItemTitle>
+              <ItemTitle className="text-left">
+                Gotowa do pracy offline
+              </ItemTitle>
               <ItemDescription>
                 {renderBooleanState(
                   status.offlineReady,
@@ -170,7 +172,9 @@ export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
               {status.installed ? <Smartphone /> : <CircleDashed />}
             </ItemMedia>
             <ItemContent>
-              <ItemTitle>Zainstalowana jako PWA</ItemTitle>
+              <ItemTitle className="text-left">
+                Zainstalowana jako PWA
+              </ItemTitle>
               <ItemDescription>
                 {renderBooleanState(
                   status.installed,
@@ -189,7 +193,9 @@ export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
               {status.persisted ? <ShieldCheck /> : <CircleOff />}
             </ItemMedia>
             <ItemContent>
-              <ItemTitle>Trwała pamięć przeglądarki</ItemTitle>
+              <ItemTitle className="text-left">
+                Trwała pamięć przeglądarki
+              </ItemTitle>
               <ItemDescription>
                 {getPersistedMessage(status.persisted)}
               </ItemDescription>
@@ -218,7 +224,9 @@ export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
               <HardDrive />
             </ItemMedia>
             <ItemContent>
-              <ItemTitle>Zużycie i limit pamięci</ItemTitle>
+              <ItemTitle className="text-left">
+                Zużycie i limit pamięci
+              </ItemTitle>
               <ItemDescription>
                 {getStorageMessage(
                   status.storageSupported,

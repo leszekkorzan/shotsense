@@ -16,7 +16,7 @@ import { Button } from "./components/ui/button";
 import { sendBrowserEvent } from "./hooks/use-browser-events";
 
 function PWA() {
-  const period = 60 * 60 * 1000; // 1h
+  const period = 60 * 60 * 1000;
   const [isRefreshing, setIsRefreshing] = useState(false);
   const toastRef = useRef<string | number | undefined>(undefined);
   const {
@@ -31,9 +31,12 @@ function PWA() {
       if (r?.active?.state === "activated") {
         registerPeriodicSync(period, swUrl, r);
       } else if (r?.installing) {
-        toastRef.current = toast.loading("Wczytywanie aplikacji...", {
-          id: toastRef.current,
-        });
+        toastRef.current = toast.loading(
+          "Wczytywanie aplikacji. Może to zająć chwilę.",
+          {
+            id: toastRef.current,
+          }
+        );
 
         r.installing.addEventListener("statechange", (e) => {
           const sw = e.target as ServiceWorker;
