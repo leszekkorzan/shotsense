@@ -64,9 +64,7 @@ const RootLayout = () => {
                     Strona główna
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                {pathname !== "/" && (
-                  <BreadcrumbSeparator className="hidden md:block" />
-                )}
+                <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
                   <BreadcrumbPage>{getPageTitle(pathname)}</BreadcrumbPage>
                 </BreadcrumbItem>

@@ -151,7 +151,7 @@ function RouteComponent() {
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-2">
       <BackButton />
-      <Card className="max-sm:py-1">
+      <Card className="max-sm:gap-1 max-sm:py-1">
         <CardHeader className="gap-3 max-sm:p-4 max-sm:py-3">
           <CardTitle className="flex items-center gap-2">
             <FlameIcon className="mb-1" size={20} />
@@ -196,7 +196,7 @@ function RouteComponent() {
         </CardContent>
       </Card>
 
-      <Card className="border-dashed">
+      <Card className="mt-1 border-dashed md:mt-2">
         <CardContent className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-4">
           <div className="rounded-lg border bg-muted/50 px-3 py-2">
             <div className="text-muted-foreground text-xs">Strzały</div>
