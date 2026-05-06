@@ -1,5 +1,7 @@
 import { db, type Session, type SessionFile } from "@/lib/db";
 
+export const SESSIONS_PAGE_SIZE = 15;
+
 function toSessionFile(sessionId: number, imageBlob: Blob): SessionFile {
   const now = new Date();
   return {
@@ -117,6 +119,26 @@ export async function cancelSession(sessionId: number): Promise<void> {
 export async function getAllSessions() {
   const sessions = await db.sessions.orderBy("createdAt").reverse().toArray();
   return sessions;
+}
+
+export function getSessionsCount(): Promise<number> {
+  return db.sessions.count();
+}
+
+export function getSessionsPage(
+  page: number,
+  pageSize: number = SESSIONS_PAGE_SIZE
+) {
+  const safePage = Math.max(1, Math.floor(page));
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const offset = (safePage - 1) * safePageSize;
+
+  return db.sessions
+    .orderBy("createdAt")
+    .reverse()
+    .offset(offset)
+    .limit(safePageSize)
+    .toArray();
 }
 
 export async function clearAllData(confirm: "DELETE") {

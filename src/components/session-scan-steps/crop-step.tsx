@@ -103,6 +103,7 @@ export function CropStep({
     setLoadedTemplate(null);
   }, [initialTargetTemplate]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <->
   useEffect(() => {
     let cancelled = false;
 
@@ -134,6 +135,8 @@ export function CropStep({
           setLoadedTemplate(null);
         }
       });
+
+    handleDetect();
 
     return () => {
       cancelled = true;
@@ -300,6 +303,17 @@ export function CropStep({
               </button>
             ))}
           </div>
+
+          {imageUrl ? (
+            <div className="overflow-hidden rounded-lg border border-border bg-background">
+              {/** biome-ignore lint/correctness/useImageSize: <-> */}
+              <img
+                alt="Podgląd przesłanego zdjęcia"
+                className="h-auto w-full object-contain"
+                src={imageUrl}
+              />
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/20 px-4 py-3">
