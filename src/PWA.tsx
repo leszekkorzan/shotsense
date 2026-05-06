@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import LoadingButton from "./components/common/LoadingButton";
 import { Button } from "./components/ui/button";
+import { sendBrowserEvent } from "./hooks/use-browser-events";
 
 function PWA() {
   const period = 60 * 60 * 1000; // 1h
@@ -38,6 +39,7 @@ function PWA() {
           const sw = e.target as ServiceWorker;
           if (sw.state === "activated") {
             toast.dismiss(toastRef.current);
+            sendBrowserEvent("app:pwa-offline-ready");
             registerPeriodicSync(period, swUrl, r);
           }
         });

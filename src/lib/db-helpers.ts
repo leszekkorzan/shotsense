@@ -118,3 +118,10 @@ export async function getAllSessions() {
   const sessions = await db.sessions.orderBy("createdAt").reverse().toArray();
   return sessions;
 }
+
+export async function clearAllData(confirm: "DELETE") {
+  if (confirm !== "DELETE") {
+    throw new Error("Confirmation text does not match");
+  }
+  return await db.delete({ disableAutoOpen: false });
+}

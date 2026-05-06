@@ -44,6 +44,7 @@ const AXIS_STEP = 0.005;
 const MOVE_STEP = 0.005;
 const ROTATE_STEP = 0.5;
 const QUARTER_TURN = 90;
+const TARGET_MAX_EXPORT_BYTES = 450 * 1024;
 const OVERLAY_BUTTON_BASE_STYLE = {
   position: "absolute",
   zIndex: 30,
@@ -95,15 +96,49 @@ async function imageBlobToAlignedBlob(
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     context.restore();
 
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((result) => resolve(result), "image/jpeg", 0.95);
-    });
+    const encodeCanvas = (
+      mimeType: string,
+      quality: number
+    ): Promise<Blob | null> =>
+      new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((result) => resolve(result), mimeType, quality);
+      });
 
-    if (!blob) {
+    const candidates: Array<{ mimeType: string; quality: number }> = [
+      { mimeType: "image/webp", quality: 0.92 },
+      { mimeType: "image/webp", quality: 0.88 },
+      { mimeType: "image/webp", quality: 0.84 },
+      { mimeType: "image/jpeg", quality: 0.93 },
+      { mimeType: "image/jpeg", quality: 0.9 },
+      { mimeType: "image/jpeg", quality: 0.86 },
+    ];
+
+    let bestBlob: Blob | null = null;
+    for (const candidate of candidates) {
+      const encodedBlob = await encodeCanvas(
+        candidate.mimeType,
+        candidate.quality
+      );
+
+      if (!encodedBlob) {
+        continue;
+      }
+
+      if (!bestBlob || encodedBlob.size < bestBlob.size) {
+        bestBlob = encodedBlob;
+      }
+
+      if (encodedBlob.size <= TARGET_MAX_EXPORT_BYTES) {
+        bestBlob = encodedBlob;
+        break;
+      }
+    }
+
+    if (!bestBlob) {
       throw new Error("Failed to export aligned image blob");
     }
 
-    return blob;
+    return bestBlob;
   } finally {
     bitmap.close();
   }

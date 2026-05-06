@@ -17,11 +17,15 @@ export interface TargetTemplate {
 
 export const TARGET_TEMPLATES: TargetTemplateOption[] = [
   {
-    id: "DEFAULT_ISSF_50M_RIFLE",
-    title: "Karabin Sportowy 50m (ISSF)",
+    id: "DEFAULT_TS1",
+    title: "TS1 / ISSF 50m",
     getTemplate: () =>
-      import("./templates/ISSF_50M_RIFLE").then(
-        (t) => t.ISSF_50M_RIFLE_TARGET_TEMPLATE
-      ),
+      import("./templates/TS1").then((t) => t.TS1_TARGET_TEMPLATE),
+  },
+  {
+    id: "DEFAULT_TS2",
+    title: "TS2 / ISSF PDW",
+    getTemplate: () =>
+      import("./templates/TS2").then((t) => t.TS2_TARGET_TEMPLATE),
   },
 ];

@@ -1,6 +1,6 @@
 import type { TargetTemplate } from "../target-templates";
 
-export const ISSF_50M_RIFLE_TARGET_TEMPLATE: TargetTemplate = {
+export const TS1_TARGET_TEMPLATE: TargetTemplate = {
   anchor_diameter_mm: 112.4,
   // Nominal paper size for ISSF 50m rifle target.
   canvas_size_mm: 170,
