@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useBrowserEvent } from "@/hooks/use-browser-events";
+import { cn } from "@/lib/utils";
 import LoadingButton from "../common/LoadingButton";
 import {
   Card,
@@ -52,7 +53,7 @@ const initialState: StatusState = {
   isPersisting: false,
 };
 
-export default function InfoSettings() {
+export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
   const [status, setStatus] = useState<StatusState>(initialState);
 
   useEffect(() => {
@@ -133,12 +134,14 @@ export default function InfoSettings() {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informacje</CardTitle>
-        <CardDescription>Stan aplikacji PWA</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Card className={cn(hideHeader && "py-1")}>
+      {!hideHeader && (
+        <CardHeader>
+          <CardTitle>Informacje</CardTitle>
+          <CardDescription>Stan aplikacji PWA</CardDescription>
+        </CardHeader>
+      )}
+      <CardContent className={cn(hideHeader && "p-2")}>
         <ItemGroup>
           <Item
             className={getWarningItemClassName(status.offlineReady === false)}
