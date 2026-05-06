@@ -1,5 +1,5 @@
-import { Crosshair } from "lucide-react";
-import { useState } from "react";
+import { Crosshair, Download, Share2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,23 +10,93 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { sendBrowserEvent } from "@/hooks/use-browser-events";
-import InfoSettings from "./settings/Info";
+import InfoSettings, { getPWAInstalledState } from "./settings/Info";
 import { Badge } from "./ui/badge";
 
 const STEPS = {
   WELCOME: 0,
-  SUMMARY: 1,
+  INSTALL_PWA: 1,
+  SUMMARY: 2,
 };
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+  }>;
+};
+
+const IOS_USER_AGENT_REGEX = /iphone|ipad|ipod/;
 
 export default function Onboarding() {
   const [isOpen, setIsOpen] = useState(true);
-
   const [step, setStep] = useState(0);
+  const [installAccepted, setInstallAccepted] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] =
+    useState<BeforeInstallPromptEvent | null>(null);
 
-  const setup = () => {
+  const isIOSDevice = getIsIOSDevice();
+  const canShowInstallPrompt = Boolean(installPromptEvent);
+  let installStepState: "prompt" | "accepted" | "manual" = "manual";
+
+  if (canShowInstallPrompt) {
+    installStepState = "prompt";
+  } else if (installAccepted) {
+    installStepState = "accepted";
+  }
+
+  const setup = useCallback(() => {
     setStep(STEPS.SUMMARY);
     window.localStorage.setItem("allowWorkerRegistration", "true");
     sendBrowserEvent("app:allow-worker-registration");
+  }, []);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event as BeforeInstallPromptEvent);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallPromptEvent(null);
+      setInstallAccepted(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  const initAndCheckPWA = () => {
+    const isPWAInstalled = getPWAInstalledState();
+
+    if (isPWAInstalled) {
+      setup();
+    } else {
+      setStep(STEPS.INSTALL_PWA);
+    }
+  };
+
+  const handleInstallApp = async () => {
+    if (!installPromptEvent) {
+      console.warn("Install prompt event is not available");
+      return;
+    }
+
+    await installPromptEvent.prompt();
+    const choice = await installPromptEvent.userChoice;
+
+    if (choice.outcome === "accepted") {
+      setInstallPromptEvent(null);
+      setInstallAccepted(true);
+    }
   };
 
   return (
@@ -65,14 +135,82 @@ export default function Onboarding() {
                   <InfoSettings hideHeader />
                 </>
               )}
+              {step === STEPS.INSTALL_PWA && (
+                <div className="space-y-3 text-left">
+                  <DialogDescription className="text-center text-sm leading-6">
+                    Dla wygody i najlepszego działania offline zainstaluj
+                    ShotSense jako aplikację PWA na twoim urządzeniu.
+                  </DialogDescription>
+
+                  {installStepState === "prompt" && (
+                    <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-sm leading-6">
+                      Ta przeglądarka wspiera szybką instalację. Kliknij
+                      przycisk instalacji poniżej.
+                    </div>
+                  )}
+                  {installStepState === "accepted" && (
+                    <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-sm leading-6">
+                      Instalacja została zaakceptowana. Przejdź teraz do
+                      zainstalowanej aplikacji. Jeśli jesteś już w niej, kliknij
+                      przycisk dalej.
+                    </div>
+                  )}
+                  {installStepState === "manual" && (
+                    <div className="rounded-lg border border-border/70 bg-muted/30 p-3 text-sm leading-6">
+                      {isIOSDevice ? (
+                        <>
+                          <p>Na iOS instalacja odbywa się ręcznie. W Safari:</p>
+                          <ol className="mt-2 list-decimal space-y-1 pl-5">
+                            <li>
+                              Kliknij ikonę udostępniania{" "}
+                              <Share2 className="mx-1 inline size-4" />
+                            </li>
+                            <li>Wybierz „Dodaj do ekranu początkowego”</li>
+                            <li>Zatwierdź przyciskiem „Dodaj”</li>
+                          </ol>
+                        </>
+                      ) : (
+                        <p>
+                          Ta przeglądarka nie udostępnia szybkiego okna
+                          instalacji. Otwórz menu przeglądarki i wybierz opcję
+                          „Zainstaluj aplikację” lub „Dodaj do ekranu głównego”.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </DialogHeader>
 
-          <DialogFooter className="mt-6 sm:justify-center">
+          <DialogFooter className="mt-6 sm:flex-col sm:justify-center">
             {step === STEPS.WELCOME && (
-              <Button className="min-w-32" onClick={setup}>
+              <Button className="min-w-32" onClick={initAndCheckPWA}>
                 Zaczynamy
               </Button>
+            )}
+            {step === STEPS.INSTALL_PWA && (
+              <>
+                {canShowInstallPrompt && !installAccepted && (
+                  <Button className="min-w-32" onClick={handleInstallApp}>
+                    <Download />
+                    Zainstaluj aplikację
+                  </Button>
+                )}
+                {installAccepted ? (
+                  <Button className="min-w-32" onClick={setup}>
+                    Dalej
+                  </Button>
+                ) : (
+                  <Button
+                    className="min-w-32"
+                    onClick={setup}
+                    variant="outline"
+                  >
+                    Przejdź dalej, zostaję w przeglądarce
+                  </Button>
+                )}
+              </>
             )}
             {step === STEPS.SUMMARY && (
               <Button
@@ -88,4 +226,9 @@ export default function Onboarding() {
       </DialogContent>
     </Dialog>
   );
+}
+
+function getIsIOSDevice() {
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  return IOS_USER_AGENT_REGEX.test(userAgent);
 }

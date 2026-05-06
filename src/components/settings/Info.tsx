@@ -66,7 +66,7 @@ export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
         navigator.storage?.persisted?.(),
         navigator.storage?.estimate?.(),
         getOfflineReadyState(),
-        getInstalledState(),
+        getPWAInstalledState(),
       ]);
       if (cancelled) {
         return;
@@ -261,7 +261,7 @@ async function getOfflineReadyState() {
   return false;
 }
 
-function getInstalledState() {
+export function getPWAInstalledState() {
   if (window.matchMedia("(display-mode: standalone)").matches) {
     return true;
   }
