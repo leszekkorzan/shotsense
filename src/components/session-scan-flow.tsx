@@ -26,7 +26,7 @@ import {
   cancelSession,
   getSessionById,
   getSessionFileBySessionId,
-} from "@/lib/db-helpers";
+} from "@/lib/db/db-helpers";
 import LoadingButton from "./common/LoadingButton";
 import { Spinner } from "./ui/spinner";
 

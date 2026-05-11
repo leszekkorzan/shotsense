@@ -7,4 +7,8 @@ const mlWorker = new ComlinkWorker<typeof import("./ml")>(
   new URL("./ml", import.meta.url)
 );
 
-export { mlWorker, openCvWorker };
+const dataSyncWorker = new ComlinkWorker<typeof import("./dataSync")>(
+  new URL("./dataSync", import.meta.url)
+);
+
+export { dataSyncWorker, mlWorker, openCvWorker };

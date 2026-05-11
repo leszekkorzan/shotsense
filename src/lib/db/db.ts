@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from "dexie";
+import "dexie-export-import";
 
 export type SessionStatus = "TO_CROP" | "TO_MARK" | "COMPLETED";
 

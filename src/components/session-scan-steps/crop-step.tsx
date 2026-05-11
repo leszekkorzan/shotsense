@@ -6,8 +6,8 @@ import {
   type Point,
 } from "@/components/common/PerspectiveCrop";
 import { Button } from "@/components/ui/button";
-import type { SessionStatus } from "@/lib/db";
-import { advanceSessionToMark } from "@/lib/db-helpers";
+import type { SessionStatus } from "@/lib/db/db";
+import { advanceSessionToMark } from "@/lib/db/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,

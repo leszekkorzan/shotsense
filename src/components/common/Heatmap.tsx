@@ -1,6 +1,6 @@
 import type React from "react";
 import { useEffect, useRef } from "react";
-import type { Shot } from "@/lib/db";
+import type { Shot } from "@/lib/db/db";
 
 interface HeatmapProps {
   className?: string;

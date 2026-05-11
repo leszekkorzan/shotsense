@@ -3,7 +3,7 @@ import {
   db,
   type Session,
   type SessionFile,
-} from "@/lib/db";
+} from "@/lib/db/db";
 
 export const SESSIONS_PAGE_SIZE = 15;
 

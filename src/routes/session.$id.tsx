@@ -20,8 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { type Shot as DbShot, db, type Session } from "@/lib/db";
-import { cancelSession, getSessionFileBySessionId } from "@/lib/db-helpers";
+import { type Shot as DbShot, db, type Session } from "@/lib/db/db";
+import { cancelSession, getSessionFileBySessionId } from "@/lib/db/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,

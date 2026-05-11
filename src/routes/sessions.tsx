@@ -21,7 +21,7 @@ import {
   getSessionsCount,
   getSessionsPage,
   SESSIONS_PAGE_SIZE,
-} from "@/lib/db-helpers";
+} from "@/lib/db/db-helpers";
 import { TARGET_TEMPLATES } from "@/lib/targets/target-templates";
 import { cn } from "@/lib/utils";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { SessionStatus } from "@/lib/db";
-import { completeSession } from "@/lib/db-helpers";
+import type { SessionStatus } from "@/lib/db/db";
+import { completeSession } from "@/lib/db/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,

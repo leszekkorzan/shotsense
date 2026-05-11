@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { clearAllData } from "@/lib/db-helpers";
+import { clearAllData } from "@/lib/db/db-helpers";
 import LoadingButton from "../common/LoadingButton";
 
 export default function DangerZoneSettings() {

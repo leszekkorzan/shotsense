@@ -1,7 +1,7 @@
 import { ImagePlusIcon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createSessionFromImage } from "@/lib/db-helpers";
+import { createSessionFromImage } from "@/lib/db/db-helpers";
 
 type UploadStepProps = {
   onSessionCreated: (id: number) => void;

@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { getShotsForTarget } from "@/lib/db-helpers";
+import { getShotsForTarget } from "@/lib/db/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,

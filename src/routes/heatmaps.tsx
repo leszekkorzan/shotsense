@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getTargetsWithSessions } from "@/lib/db-helpers";
+import { getTargetsWithSessions } from "@/lib/db/db-helpers";
 import { TARGET_TEMPLATES } from "@/lib/targets/target-templates";
 
 export const Route = createFileRoute("/heatmaps")({
