@@ -1,3 +1,6 @@
+import { Scanner } from "@yudiel/react-qr-scanner";
+import { QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import LoadingButton from "@/components/common/LoadingButton";
@@ -56,6 +59,7 @@ export default function ApiBackupSettings() {
   const [modalState, setModalState] = useState<ModalState>("closed");
   const [connectUuid, setConnectUuid] = useState("");
   const [connectPin, setConnectPin] = useState("");
+  const [isQrScannerOpen, setIsQrScannerOpen] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [createPin, setCreatePin] = useState("");
   const [createPinConfirmation, setCreatePinConfirmation] = useState("");
@@ -106,6 +110,7 @@ export default function ApiBackupSettings() {
     setModalState("closed");
     setConnectUuid("");
     setConnectPin("");
+    setIsQrScannerOpen(false);
     setCreatePin("");
     setCreatePinConfirmation("");
     setCreateAdminKey("");
@@ -114,6 +119,7 @@ export default function ApiBackupSettings() {
   const openConnectModal = () => {
     setConnectUuid("");
     setConnectPin("");
+    setIsQrScannerOpen(false);
     setModalState("connect");
   };
 
@@ -302,6 +308,45 @@ export default function ApiBackupSettings() {
           <FieldGroup className="gap-4">
             <Field>
               <FieldContent>
+                <LoadingButton
+                  onClick={() => setIsQrScannerOpen((previous) => !previous)}
+                  type="button"
+                  variant="outline"
+                >
+                  <QrCode />
+                  {isQrScannerOpen ? "Wyłącz skaner" : "Skanuj kod QR"}
+                </LoadingButton>
+              </FieldContent>
+            </Field>
+
+            {isQrScannerOpen ? (
+              <div className="overflow-hidden rounded-md border">
+                <Scanner
+                  classNames={{
+                    container: "w-full",
+                    video: "max-h-72 w-full object-cover",
+                  }}
+                  onError={(error) => {
+                    console.error("QR scanner error:", error);
+                    toast.error("Nie udało się uruchomić skanera QR.");
+                  }}
+                  onScan={(detectedCodes) => {
+                    const detectedCode = detectedCodes[0]?.rawValue?.trim();
+
+                    if (!detectedCode) {
+                      return;
+                    }
+
+                    setConnectUuid(detectedCode);
+                    setIsQrScannerOpen(false);
+                    toast.success("Zeskanowano UUID bucketu.");
+                  }}
+                />
+              </div>
+            ) : null}
+
+            <Field>
+              <FieldContent>
                 <FieldLabel htmlFor="backup-bucket-uuid">
                   UUID bucketu
                 </FieldLabel>
@@ -450,13 +495,24 @@ export default function ApiBackupSettings() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-lg border bg-muted/30 p-4">
+          <div className="rounded-lg border bg-muted/30 p-4 text-center">
             <div className="text-muted-foreground text-xs uppercase tracking-wide">
               UUID
             </div>
-            <div className="mt-1 break-all font-medium">
+            <div className="mt-1 font-medium">
               {backupAuthKey?.uuid ?? "Brak danych"}
             </div>
+            {backupAuthKey?.uuid && (
+              <QRCodeSVG className="mx-auto mt-2" value={backupAuthKey.uuid} />
+            )}
+            <br />
+            <div className="text-muted-foreground text-xs uppercase tracking-wide">
+              PIN
+            </div>
+            <div className="mt-1 font-medium">****</div>
+            <p className="text-[10px] text-muted-foreground italic">
+              4 cyfrowy PIN, który podałeś podczas tworzenia bucketu
+            </p>
           </div>
 
           <DialogFooter>
