@@ -50,40 +50,33 @@ function normalizeBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
   return new Uint8Array(buffer);
 }
 
-function readBackupHeader(blob: Blob): Promise<ParsedBackup> {
-  return blob.arrayBuffer().then((buffer) => {
-    const bytes = new Uint8Array(buffer);
-
-    if (bytes.byteLength < 5) {
-      return { encrypted: false, compressedBlob: blob };
-    }
-
-    const magic = new TextDecoder().decode(bytes.slice(0, 4));
-    if (magic !== BACKUP_MAGIC) {
-      return { encrypted: false, compressedBlob: blob };
-    }
-
-    const version = bytes[4];
-    if (version !== BACKUP_VERSION) {
-      throw new BackupFormatError(`Unsupported backup version: ${version}`);
-    }
-
-    const headerLength = 4 + 1 + BACKUP_SALT_LENGTH + BACKUP_IV_LENGTH;
-    if (bytes.byteLength < headerLength) {
-      throw new BackupFormatError("Backup header is incomplete.");
-    }
-
-    const salt = bytes.slice(5, 5 + BACKUP_SALT_LENGTH);
-    const iv = bytes.slice(5 + BACKUP_SALT_LENGTH, headerLength);
-    const ciphertext = bytes.slice(headerLength);
-
-    return {
-      encrypted: true,
-      salt,
-      iv,
-      ciphertext,
-    };
-  });
+async function readBackupHeader(blob: Blob): Promise<ParsedBackup> {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  if (bytes.byteLength < 5) {
+    return { encrypted: false, compressedBlob: blob };
+  }
+  const magic = new TextDecoder().decode(bytes.slice(0, 4));
+  if (magic !== BACKUP_MAGIC) {
+    return { encrypted: false, compressedBlob: blob };
+  }
+  const version = bytes[4];
+  if (version !== BACKUP_VERSION) {
+    throw new BackupFormatError(`Unsupported backup version: ${version}`);
+  }
+  const headerLength = 4 + 1 + BACKUP_SALT_LENGTH + BACKUP_IV_LENGTH;
+  if (bytes.byteLength < headerLength) {
+    throw new BackupFormatError("Backup header is incomplete.");
+  }
+  const salt = bytes.slice(5, 5 + BACKUP_SALT_LENGTH);
+  const iv = bytes.slice(5 + BACKUP_SALT_LENGTH, headerLength);
+  const ciphertext = bytes.slice(headerLength);
+  return {
+    encrypted: true,
+    salt,
+    iv,
+    ciphertext,
+  };
 }
 
 export async function deriveBackupEncryptionKey(
@@ -221,6 +214,7 @@ export async function importDatabase(
 
     await db.import(decompressedBlob, {
       overwriteValues: true,
+      clearTablesBeforeImport: true,
       progressCallback: onProgress,
     });
 
@@ -239,12 +233,13 @@ export async function importDatabase(
 
       await db.import(decompressedBlob, {
         overwriteValues: true,
+        clearTablesBeforeImport: true,
         progressCallback: onProgress,
       });
 
       return { status: "ok" };
     } catch {
-      // pass retry
+      // pass
     }
   }
 
@@ -266,6 +261,7 @@ export async function importDatabase(
 
     await db.import(decompressedBlob, {
       overwriteValues: true,
+      clearTablesBeforeImport: true,
       progressCallback: onProgress,
     });
 

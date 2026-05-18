@@ -29,3 +29,4 @@ dev-dist
 skills-lock.json
 
 public/ort
+.env

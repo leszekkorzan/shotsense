@@ -1,10 +1,18 @@
 import { proxy } from "comlink";
-import { Download, LockKeyhole, Trash2, Upload } from "lucide-react";
+import {
+  CloudUpload,
+  Download,
+  LockKeyhole,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/contexts/DialogProvider";
+import { backupApiClient } from "@/lib/api/api-client";
 import {
   deleteEncryptionKey,
+  getBackupAuthKey,
   loadEncryptionKey,
   saveEncryptionKey,
 } from "@/lib/db/config-db";
@@ -49,6 +57,13 @@ export default function ExportSettings({
   const confirm = useConfirm();
   const [exportState, setExportState] = useState<ExportState>("idle");
   const [importState, setImportState] = useState<ImportState>("idle");
+  const [isLoadingBackupAuthKey, setIsLoadingBackupAuthKey] = useState(true);
+  const [backupAuthKey, setBackupAuthKey] = useState<{
+    id: string;
+    key: string;
+    uuid: string;
+  } | null>(null);
+  const [isOnlineBackuping, setIsOnlineBackuping] = useState(false);
   const [encryptionKeyState, setEncryptionKeyState] =
     useState<EncryptionKeyState>("loading");
   const [encryptionKey, setEncryptionKey] = useState<CryptoKey | null>(null);
@@ -60,12 +75,116 @@ export default function ExportSettings({
   const [isDeletingEncryptionKey, setIsDeletingEncryptionKey] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [importProgress, setImportProgress] = useState(0);
+  const [backups, setBackups] = useState<
+    {
+      key: string;
+      lastModified?: string;
+      size?: number;
+      etag?: string;
+    }[]
+  >([]);
+  const [isLoadingBackups, setIsLoadingBackups] = useState(false);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [importPasswordDialogState, setImportPasswordDialogState] =
     useState<ImportPasswordDialogState>("closed");
   const [importPassword, setImportPassword] = useState("");
   const [importPasswordMessage, setImportPasswordMessage] = useState("");
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const makeProgressCallback = (set: (n: number) => void) =>
+    proxy(
+      (progress: {
+        totalTables: number;
+        completedTables: number;
+        totalRows: number | undefined;
+        completedRows: number;
+        done: boolean;
+      }) => {
+        const percent =
+          progress.totalRows && progress.totalRows > 0
+            ? Math.round((progress.completedRows / progress.totalRows) * 100)
+            : 0;
+        set(percent);
+        return true;
+      }
+    );
+
+  const formatSize = (size?: number) => {
+    if (size == null) {
+      return "-";
+    }
+
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+      return `${Math.round(size / 1024)} KB`;
+    }
+
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadBackupAuthKey() {
+      try {
+        const keyRecord = await getBackupAuthKey();
+
+        if (!cancelled) {
+          setBackupAuthKey(keyRecord);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingBackupAuthKey(false);
+        }
+      }
+    }
+
+    loadBackupAuthKey().catch(() => {
+      if (!cancelled) {
+        setIsLoadingBackupAuthKey(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!backupAuthKey) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchBackups() {
+      setIsLoadingBackups(true);
+      try {
+        const resp = await backupApiClient.GET("/api/backup/get-backups");
+        if (cancelled) {
+          return;
+        }
+        setBackups(resp.data?.backups ?? []);
+      } catch (error) {
+        console.error("Fetch backups error:", error);
+        toast.error("Nie udało się pobrać listy kopii zapasowych.");
+      } finally {
+        if (!cancelled) {
+          setIsLoadingBackups(false);
+        }
+      }
+    }
+
+    fetchBackups();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [backupAuthKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -175,22 +294,7 @@ export default function ExportSettings({
   const handleExport = async () => {
     setExportState("exporting");
     try {
-      const progressCallback = proxy(
-        (progress: {
-          totalTables: number;
-          completedTables: number;
-          totalRows: number | undefined;
-          completedRows: number;
-          done: boolean;
-        }) => {
-          const percent =
-            progress.totalRows && progress.totalRows > 0
-              ? Math.round((progress.completedRows / progress.totalRows) * 100)
-              : 0;
-          setExportProgress(percent);
-          return true;
-        }
-      );
+      const progressCallback = makeProgressCallback(setExportProgress);
 
       const blob = await dataSyncWorker.exportDatabase(progressCallback);
 
@@ -210,6 +314,137 @@ export default function ExportSettings({
     } finally {
       setExportState("idle");
       setExportProgress(0);
+    }
+  };
+
+  const handleOnlineExport = async () => {
+    if (!backupAuthKey) {
+      toast.error("Najpierw skonfiguruj połączenie z bucketem.");
+      return;
+    }
+
+    setExportState("exporting");
+    setIsOnlineBackuping(true);
+
+    try {
+      const backupObjectHash = crypto.randomUUID().replaceAll("-", "");
+      const uploadUrlResponse = await backupApiClient.POST(
+        "/api/backup/generate-upload-url",
+        {
+          body: {
+            hash: backupObjectHash,
+          },
+        }
+      );
+
+      const uploadUrl = uploadUrlResponse.data?.uploadUrl;
+
+      if (!uploadUrl) {
+        throw new Error("Missing upload URL response");
+      }
+
+      const progressCallback = makeProgressCallback(setExportProgress);
+
+      const blob = await dataSyncWorker.exportDatabase(progressCallback);
+
+      const uploadResponse = await fetch(uploadUrl, {
+        body: blob,
+        method: "PUT",
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed with status ${uploadResponse.status}`);
+      }
+
+      toast.success("Kopia zapasowa online została wysłana pomyślnie.");
+      try {
+        const resp = await backupApiClient.GET("/api/backup/get-backups");
+        setBackups(resp.data?.backups ?? []);
+      } catch (err) {
+        console.error("Refresh backups after upload failed:", err);
+      }
+    } catch (error) {
+      console.error("Online export error:", error);
+      toast.error("Nie udało się wysłać kopii zapasowej online.");
+    } finally {
+      setExportState("idle");
+      setExportProgress(0);
+      setIsOnlineBackuping(false);
+    }
+  };
+
+  const handleRestore = async (key: string) => {
+    const confirmed = await confirm({
+      description:
+        "Czy chcesz przywrócić tę kopię zapasową? Obecne dane zostaną zastąpione.",
+      confirmVariant: "destructive",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const resp = await backupApiClient.POST(
+        "/api/backup/generate-download-url",
+        {
+          body: { key },
+        }
+      );
+
+      const downloadUrl = resp.data?.downloadUrl;
+
+      if (!downloadUrl) {
+        throw new Error("Missing download URL");
+      }
+
+      const dlResp = await fetch(downloadUrl);
+      if (!dlResp.ok) {
+        throw new Error(`Download failed: ${dlResp.status}`);
+      }
+
+      const blob = await dlResp.blob();
+      const safeName = `${key.replace(/[^a-z0-9._-]/gi, "_")}.ssbk`;
+      const file = new File([blob], safeName, {
+        type: "application/octet-stream",
+      });
+
+      await runImport(file);
+    } catch (error) {
+      console.error("Restore error:", error);
+      toast.error("Nie udało się pobrać i przywrócić kopii zapasowej.");
+    }
+  };
+
+  const handleDeleteBackup = async (key: string) => {
+    const confirmed = await confirm({
+      description: "Czy na pewno chcesz usunąć tę kopię zapasową?",
+      confirmVariant: "destructive",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingKey(key);
+
+    try {
+      const resp = await backupApiClient.DELETE("/api/backup/delete-backup", {
+        body: { key },
+      });
+
+      if (resp.data?.success) {
+        toast.success("Kopia zapasowa została usunięta.");
+        const r = await backupApiClient.GET("/api/backup/get-backups");
+        setBackups(r.data?.backups ?? []);
+      } else {
+        toast.error("Usuwanie kopii zapasowej nie powiodło się.");
+      }
+    } catch (error) {
+      console.error("Delete backup error:", error);
+      toast.error("Nie udało się usunąć kopii zapasowej.");
+    } finally {
+      setDeletingKey(null);
     }
   };
 
@@ -333,15 +568,98 @@ export default function ExportSettings({
           )}
           <LoadingButton
             className="w-full"
-            disabled={importState === "importing"}
-            loading={exportState === "exporting"}
+            disabled={importState === "importing" || exportState !== "idle"}
+            loading={exportState === "exporting" && !isOnlineBackuping}
             onClick={handleExport}
           >
             <Download className="mr-2 h-4 w-4" />
             Pobierz kopię zapasową
           </LoadingButton>
+
+          {!isLoadingBackupAuthKey && backupAuthKey ? (
+            <LoadingButton
+              disabled={importState === "importing" || exportState !== "idle"}
+              loading={isOnlineBackuping}
+              onClick={handleOnlineExport}
+              variant="secondary"
+            >
+              <CloudUpload className="mr-2 h-4 w-4" />
+              Zrób kopię zapasową online
+            </LoadingButton>
+          ) : null}
         </CardContent>
       </Card>
+
+      {!isLoadingBackupAuthKey && backupAuthKey ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Kopie zapasowe online</CardTitle>
+            <CardDescription>
+              Lista kopii zapasowych przechowywanych online.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {isLoadingBackups && (
+              <div className="text-muted-foreground">Ładowanie kopii...</div>
+            )}
+
+            {!isLoadingBackups && backups.length === 0 && (
+              <div className="text-muted-foreground">
+                Brak kopii zapasowych.
+              </div>
+            )}
+            {!isLoadingBackups &&
+              backups.length > 0 &&
+              backups.map((b) => {
+                const name = b.key.split("/").pop() ?? b.key;
+                const modified = b.lastModified
+                  ? new Date(b.lastModified).toLocaleString()
+                  : "-";
+                const size = formatSize(b.size);
+
+                return (
+                  <div
+                    className="flex flex-col items-start justify-between gap-2 rounded-md border p-3 sm:flex-row sm:items-center"
+                    key={b.key}
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="truncate font-medium">
+                        ...{name.slice(-20)}
+                      </div>
+                      <div className="text-muted-foreground text-sm">
+                        {modified} · {size}
+                      </div>
+                    </div>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                      <LoadingButton
+                        className="w-full sm:w-auto"
+                        disabled={
+                          importState === "importing" || Boolean(deletingKey)
+                        }
+                        loading={importState === "importing"}
+                        onClick={() => handleRestore(b.key)}
+                        variant="secondary"
+                      >
+                        Przywróć
+                      </LoadingButton>
+                      <LoadingButton
+                        className="w-full sm:w-auto"
+                        disabled={
+                          importState === "importing" || Boolean(deletingKey)
+                        }
+                        loading={deletingKey === b.key}
+                        onClick={() => handleDeleteBackup(b.key)}
+                        variant="destructive"
+                      >
+                        Usuń
+                      </LoadingButton>
+                    </div>
+                  </div>
+                );
+              })}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

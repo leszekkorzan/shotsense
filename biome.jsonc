@@ -2,7 +2,12 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": ["ultracite/biome/core", "ultracite/biome/react"],
   "files": {
-    "includes": ["**", "!src/components/ui", "!**/routeTree.gen.ts"]
+    "includes": [
+      "**",
+      "!src/components/ui",
+      "!**/routeTree.gen.ts",
+      "!src/types/api-types.d.ts"
+    ]
   },
   "linter": {
     "rules": {

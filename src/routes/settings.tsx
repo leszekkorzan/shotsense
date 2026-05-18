@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, Info, TriangleAlert } from "lucide-react";
+import { CloudUpload, Download, Info, TriangleAlert } from "lucide-react";
 import { useState } from "react";
+import ApiBackupSettings from "@/components/settings/ApiBackupSettings";
 import DangerZoneSettings from "@/components/settings/DangerZone";
 import ExportSettings from "@/components/settings/ExportSettings";
 import InfoSettings from "@/components/settings/Info";
@@ -36,6 +37,10 @@ function SettingsRoute() {
           <Download />
           Eksport / Import
         </TabsTrigger>
+        <TabsTrigger className={cn(isMobile && "flex-none")} value="api-backup">
+          <CloudUpload />
+          Chmura (backup)
+        </TabsTrigger>
         <TabsTrigger
           className={cn(isMobile && "flex-none")}
           value="danger-zone"
@@ -50,6 +55,10 @@ function SettingsRoute() {
 
       <TabsContent value="export">
         <ExportSettings handleSwitchToInfoTab={() => setActiveTab("info")} />
+      </TabsContent>
+
+      <TabsContent value="api-backup">
+        <ApiBackupSettings />
       </TabsContent>
 
       <TabsContent value="danger-zone">
