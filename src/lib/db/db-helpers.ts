@@ -48,6 +48,26 @@ export function createSessionFromImage(imageBlob: Blob): Promise<number> {
   });
 }
 
+export async function replaceSessionImage(
+  sessionId: number,
+  imageBlob: Blob
+): Promise<void> {
+  const now = new Date();
+
+  await db.transaction("rw", db.sessions, db.sessionFiles, async () => {
+    await db.sessions.update(sessionId, {
+      updatedAt: now,
+    });
+
+    await db.sessionFiles.put({
+      sessionId,
+      imageBlob,
+      createdAt: now,
+      updatedAt: now,
+    });
+  });
+}
+
 export async function advanceSessionToMark(
   sessionId: number,
   targetTemplate: string,

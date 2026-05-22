@@ -53,7 +53,13 @@ const initialState: StatusState = {
   isPersisting: false,
 };
 
-export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
+export default function InfoSettings({
+  hideHeader,
+  showPowered,
+}: {
+  hideHeader?: boolean;
+  showPowered?: boolean;
+}) {
   const [status, setStatus] = useState<StatusState>(initialState);
 
   useEffect(() => {
@@ -238,6 +244,20 @@ export default function InfoSettings({ hideHeader }: { hideHeader?: boolean }) {
             </ItemContent>
           </Item>
         </ItemGroup>
+        {showPowered && (
+          <p className="mt-4 text-center text-muted-foreground text-sm">
+            Powered by{" "}
+            <a
+              className="underline underline-offset-4"
+              href="https://webaily.com"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              &copy; webaily
+            </a>
+            .
+          </p>
+        )}
       </CardContent>
     </Card>
   );

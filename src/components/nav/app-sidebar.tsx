@@ -1,7 +1,7 @@
 "use client";
 
-import { BookCheck, Flame, Scan, Settings2Icon } from "lucide-react";
 import type * as React from "react";
+import { NAV_ITEMS } from "@/components/nav/nav-items";
 import { NavMain } from "@/components/nav/nav-main";
 import {
   Sidebar,
@@ -11,45 +11,19 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "./logo";
 
-const data = {
-  // user: {
-  //   name: "todo: demo",
-  //   email: "demo@example.com",
-  //   avatar: "/avatars/shadcn.jpg",
-  // },
+export function AppSidebar({
+  pathname,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & { pathname: string }) {
+  const navMain = NAV_ITEMS;
 
-  navMain: [
-    {
-      title: "Skaner",
-      url: "/",
-      icon: <Scan />,
-    },
-    {
-      title: "Twoje sesje",
-      url: "/sessions",
-      icon: <BookCheck />,
-    },
-    {
-      title: "Heatmapy",
-      url: "/heatmaps",
-      icon: <Flame />,
-    },
-    {
-      title: "Ustawienia",
-      url: "/settings",
-      icon: <Settings2Icon />,
-    },
-  ],
-};
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMain} />
       </SidebarContent>
       {/* <SidebarFooter>
         <NavUser user={data.user} />

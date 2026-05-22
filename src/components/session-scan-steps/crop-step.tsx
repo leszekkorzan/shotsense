@@ -1,5 +1,5 @@
-import { Edit2Icon, TargetIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Edit2Icon, InfoIcon, TargetIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   PerspectiveCrop,
@@ -7,7 +7,7 @@ import {
 } from "@/components/common/PerspectiveCrop";
 import { Button } from "@/components/ui/button";
 import type { SessionStatus } from "@/lib/db/db";
-import { advanceSessionToMark } from "@/lib/db/db-helpers";
+import { advanceSessionToMark, replaceSessionImage } from "@/lib/db/db-helpers";
 import {
   TARGET_TEMPLATES,
   type TargetTemplate,
@@ -77,6 +77,7 @@ export function CropStep({
   sessionId,
   sessionStatus,
 }: CropStepProps) {
+  const retakeInputRef = useRef<HTMLInputElement | null>(null);
   const [step, setStep] = useState<"select" | "crop" | "adjust">(
     initialTargetTemplate ? "crop" : "select"
   );
@@ -213,15 +214,17 @@ export function CropStep({
     }
   };
 
-  const handleDetect = async () => {
-    if (!imageBlob || isDetecting || isSaving) {
+  const handleDetect = async (blob?: Blob | null) => {
+    const targetBlob = blob ?? imageBlob;
+
+    if (!targetBlob || isDetecting || isSaving) {
       return;
     }
 
     setIsDetecting(true);
 
     try {
-      const detection = await mlWorker.detectBlackContour(imageBlob);
+      const detection = await mlWorker.detectBlackContour(targetBlob);
       if (detection) {
         setDetectedBoundingBox(detection.bbox);
       } else {
@@ -238,6 +241,25 @@ export function CropStep({
       setDetectedBoundingBox(null);
     } finally {
       setIsDetecting(false);
+    }
+  };
+
+  const handleRetakeClick = () => {
+    retakeInputRef.current?.click();
+  };
+
+  const handleRetakeChange = async (file: File | null) => {
+    if (!file || sessionId === undefined || sessionStatus !== "TO_CROP") {
+      return;
+    }
+
+    try {
+      await replaceSessionImage(sessionId, file);
+      setDetectedBoundingBox(null);
+      await handleDetect(file);
+    } catch (error: unknown) {
+      console.error("Error occurred while replacing session image", error);
+      toast.error("Nie udało się podmienić zdjęcia.");
     }
   };
 
@@ -327,7 +349,11 @@ export function CropStep({
               <div className="flex items-center gap-2">
                 <Button
                   className="h-auto px-0"
-                  onClick={handleDetect}
+                  onClick={() => {
+                    handleDetect().catch((error: unknown) => {
+                      console.error("Error during target detection", error);
+                    });
+                  }}
                   size="xs"
                   type="button"
                   variant="link"
@@ -352,6 +378,19 @@ export function CropStep({
 
       {step === "crop" && selectedTemplate && imageUrl ? (
         <div className="relative">
+          <input
+            accept="image/*"
+            className="sr-only"
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0] ?? null;
+              event.currentTarget.value = "";
+              handleRetakeChange(file).catch((error: unknown) => {
+                console.error("Error during image retake", error);
+              });
+            }}
+            ref={retakeInputRef}
+            type="file"
+          />
           <PerspectiveCrop
             confirmLabel="Przygotuj podgląd"
             imageUrl={imageUrl}
@@ -363,7 +402,12 @@ export function CropStep({
                 console.error("Nie udalo sie przygotowac podgladu", error);
               });
             }}
+            onRetakeImage={handleRetakeClick}
           />
+          <p className="mt-2 flex items-center justify-center gap-1 text-muted-foreground text-xs">
+            <InfoIcon size="14px" />
+            Zaznacz czarne pole tarczy
+          </p>
         </div>
       ) : null}
 

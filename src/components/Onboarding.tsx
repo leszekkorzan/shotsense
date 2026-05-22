@@ -124,6 +124,18 @@ export default function Onboarding() {
                     Aplikacja PWA do zapisu i analizy trafień na tarczy z
                     wykorzystaniem AI. Działa offline.
                   </DialogDescription>
+                  <p className="mt-8 text-center text-muted-foreground text-xs">
+                    Powered by{" "}
+                    <a
+                      className="underline underline-offset-4"
+                      href="https://webaily.com"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      &copy; webaily
+                    </a>
+                    .
+                  </p>
                 </>
               )}
               {step === STEPS.SUMMARY && (

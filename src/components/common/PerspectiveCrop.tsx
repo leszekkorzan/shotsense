@@ -1,4 +1,5 @@
 import { useDrag } from "@use-gesture/react";
+import { ImagePlusIcon } from "lucide-react";
 import {
   type RefObject,
   useCallback,
@@ -7,6 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { Button } from "../ui/button";
 import { DotmSquare8 } from "../ui/dotm-square-8";
 import LoadingButton from "./LoadingButton";
 
@@ -19,6 +21,7 @@ type PerspectiveCropProps = {
   confirmLabel?: string;
   initialBoundingBox?: BoundingBox | null;
   onConfirm?: (points: Point[]) => void;
+  onRetakeImage?: () => void;
   isLoading?: boolean;
   isAutoDetecting?: boolean;
 };
@@ -134,6 +137,7 @@ export function PerspectiveCrop({
   isLoading = false,
   initialBoundingBox,
   onConfirm,
+  onRetakeImage,
   isAutoDetecting = false,
 }: PerspectiveCropProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -401,6 +405,18 @@ export function PerspectiveCrop({
         className="relative mx-auto max-h-fit w-full max-w-2xl select-none overflow-hidden rounded-xl border border-border bg-black"
         ref={stageRef}
       >
+        {onRetakeImage ? (
+          <Button
+            className="absolute top-3 right-3 z-30 h-9 gap-2 rounded-full border border-white/20 bg-black/55 px-3 text-white shadow-lg backdrop-blur hover:bg-black/70"
+            disabled={isLoading}
+            onClick={onRetakeImage}
+            type="button"
+            variant="ghost"
+          >
+            <ImagePlusIcon className="size-4" />
+            <span className="max-sm:sr-only">Zamień zdjęcie</span>
+          </Button>
+        ) : null}
         {isAutoDetecting && (
           <div className="absolute top-0 left-0 z-20 m-5 max-sm:m-2">
             <DotmSquare8 color="white" opacityBase={0.2} pattern="diamond" />

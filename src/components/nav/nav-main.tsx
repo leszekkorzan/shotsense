@@ -22,7 +22,7 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon?: React.ReactNode;
+    icon?: React.ComponentType;
     isActive?: boolean;
     items?: {
       title: string;
@@ -47,7 +47,7 @@ export function NavMain({
                 <>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton tooltip={item.title}>
-                      {item.icon}
+                      {item.icon ? <item.icon /> : null}
                       <span>{item.title}</span>
                       <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
@@ -58,6 +58,7 @@ export function NavMain({
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton asChild>
                             <Link
+                              activeProps={{ "data-active": true }}
                               onClick={() => sidebar.setOpenMobile(false)}
                               to={subItem.url}
                             >
@@ -72,10 +73,14 @@ export function NavMain({
               ) : (
                 <SidebarMenuButton asChild tooltip={item.title}>
                   <Link
+                    activeProps={{ "data-active": true }}
                     onClick={() => sidebar.setOpenMobile(false)}
                     to={item.url}
+                    {...(item.url === "/"
+                      ? { activeOptions: { exact: true } }
+                      : {})}
                   >
-                    {item.icon}
+                    {item.icon ? <item.icon /> : null}
                     <span>{item.title}</span>
                     <ChevronRightIcon className="ml-auto" />
                   </Link>

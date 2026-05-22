@@ -50,7 +50,7 @@ function SettingsRoute() {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="info">
-        <InfoSettings />
+        <InfoSettings showPowered />
       </TabsContent>
 
       <TabsContent value="export">
