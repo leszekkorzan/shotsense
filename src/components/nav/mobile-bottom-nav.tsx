@@ -11,7 +11,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Główna nawigacja"
-      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] md:hidden [@media(display-mode:standalone)]:pb-[calc(1rem+env(safe-area-inset-bottom))]"
     >
       <div className="mx-auto flex max-w-md items-center gap-1.5 rounded-[30px] border border-border/60 bg-background/90 p-1.5 shadow-black/5 shadow-xl backdrop-blur supports-backdrop-filter:bg-background/60">
         {NAV_ITEMS.map((item) => {

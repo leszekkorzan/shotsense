@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 
 import { AlertDialogProvider } from "./components/contexts/DialogProvider";
+import { ThemeProvider } from "./components/contexts/ThemeProvider";
 import { Toaster } from "./components/ui/sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { routeTree } from "./routeTree.gen";
@@ -22,12 +23,14 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <TooltipProvider>
-        <AlertDialogProvider>
-          <RouterProvider router={router} />
-          <Toaster />
-        </AlertDialogProvider>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <AlertDialogProvider>
+            <RouterProvider router={router} />
+            <Toaster />
+          </AlertDialogProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </StrictMode>
   );
 }

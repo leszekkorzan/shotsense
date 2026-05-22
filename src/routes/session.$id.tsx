@@ -166,7 +166,10 @@ function CompletedSessionView({
               <Target size={20} />
               Podsumowanie #{session.id}
             </CardTitle>
-            <Badge className="gap-1 border-dashed text-sm" variant="secondary">
+            <Badge
+              className="gap-1 border-dashed text-sm dark:text-gray-300"
+              variant="secondary"
+            >
               <Calculator size={14} />
               Suma: {totalScore} pkt
             </Badge>

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { useBrowserEvent } from "@/hooks/use-browser-events";
 import { cn } from "@/lib/utils";
 import LoadingButton from "../common/LoadingButton";
+import { ModeToggle } from "../common/mode-toggle";
 import {
   Card,
   CardContent,
@@ -148,6 +149,8 @@ export default function InfoSettings({
         </CardHeader>
       )}
       <CardContent className={cn(hideHeader && "p-2")}>
+        <ModeToggle className="mb-4" />
+
         <ItemGroup>
           <Item
             className={getWarningItemClassName(status.offlineReady === false)}
@@ -358,5 +361,7 @@ function formatBytes(value?: number) {
 }
 
 function getWarningItemClassName(isWarning: boolean) {
-  return isWarning ? "border-orange-200 bg-orange-50/80 text-orange-950" : "";
+  return isWarning
+    ? "border-orange-200 bg-orange-50/80 text-orange-950 dark:border-orange-900/60 dark:bg-orange-950/35 dark:text-orange-100 [&_[data-slot=item-description]]:text-orange-700 dark:[&_[data-slot=item-description]]:text-orange-200/80"
+    : "";
 }

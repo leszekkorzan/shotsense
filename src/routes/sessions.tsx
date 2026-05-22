@@ -257,26 +257,50 @@ function formatSessionStatus(status: string) {
 function getStatusBadgeClass(status: string) {
   switch (status) {
     case "TO_CROP":
-      return "bg-slate-500/10 text-slate-700 ring-1 ring-inset ring-slate-500/15 hover:bg-slate-500/10";
+      return (
+        "bg-slate-500/10 text-slate-700 ring-1 ring-inset ring-slate-500/15 hover:bg-slate-500/10 " +
+        "dark:bg-slate-700/30 dark:text-slate-200 dark:ring-slate-400/20 dark:hover:bg-slate-700/40"
+      );
     case "TO_MARK":
-      return "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-500/15 hover:bg-amber-500/10";
+      return (
+        "bg-amber-500/10 text-amber-700 ring-1 ring-inset ring-amber-500/15 hover:bg-amber-500/10 " +
+        "dark:bg-amber-600/20 dark:text-amber-300 dark:ring-amber-500/25 dark:hover:bg-amber-600/25"
+      );
     case "COMPLETED":
-      return "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-500/15 hover:bg-emerald-500/10";
+      return (
+        "bg-emerald-500/10 text-emerald-700 ring-1 ring-inset ring-emerald-500/15 hover:bg-emerald-500/10 " +
+        "dark:bg-emerald-700/20 dark:text-emerald-300 dark:ring-emerald-500/20 dark:hover:bg-emerald-700/30"
+      );
     default:
-      return "bg-muted text-muted-foreground ring-1 ring-inset ring-border hover:bg-muted";
+      return (
+        "bg-muted text-muted-foreground ring-1 ring-inset ring-border hover:bg-muted " +
+        "dark:bg-muted/60 dark:text-muted-foreground/90 dark:ring-border/30"
+      );
   }
 }
 
 function getStatusIconContainerClass(status: string) {
   switch (status) {
     case "TO_CROP":
-      return "bg-slate-500/10 text-slate-700 ring-slate-500/15";
+      return (
+        "bg-slate-500/10 text-slate-700 ring-slate-500/15 " +
+        "dark:bg-slate-700/25 dark:text-slate-200 dark:ring-slate-400/20"
+      );
     case "TO_MARK":
-      return "bg-amber-500/10 text-amber-700 ring-amber-500/15";
+      return (
+        "bg-amber-500/10 text-amber-700 ring-amber-500/15 " +
+        "dark:bg-amber-600/20 dark:text-amber-300 dark:ring-amber-500/25"
+      );
     case "COMPLETED":
-      return "bg-emerald-500/10 text-emerald-700 ring-emerald-500/15";
+      return (
+        "bg-emerald-500/10 text-emerald-700 ring-emerald-500/15 " +
+        "dark:bg-emerald-700/20 dark:text-emerald-300 dark:ring-emerald-500/20"
+      );
     default:
-      return "bg-muted text-muted-foreground ring-foreground/5";
+      return (
+        "bg-muted text-muted-foreground ring-foreground/5 " +
+        "dark:bg-muted/60 dark:text-muted-foreground/90 dark:ring-foreground/10"
+      );
   }
 }
 

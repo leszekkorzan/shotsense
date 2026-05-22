@@ -110,7 +110,7 @@ export default function Onboarding() {
 
           <DialogHeader className="relative gap-4 text-center">
             {step === STEPS.WELCOME && (
-              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-primary/10 shadow-sm">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-sidebar-border/70 bg-sidebar-accent text-sidebar-accent-foreground shadow-primary/10 shadow-sm">
                 <Crosshair className="size-6" />
               </div>
             )}

@@ -70,8 +70,8 @@ function RouteComponent() {
         >
           <TableCell className="w-[50%] px-3 py-3">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-100/50 ring-1 ring-orange-200 transition-colors group-hover:bg-background">
-                <Flame className="size-4 text-orange-600" />
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-100/50 ring-1 ring-orange-200 transition-colors group-hover:bg-background dark:bg-amber-600/20 dark:ring-amber-500/25">
+                <Flame className="size-4 text-orange-600 dark:text-amber-300" />
               </div>
 
               <div className="min-w-0">

@@ -268,7 +268,7 @@ export function SessionScanFlow({
         {activeSessionId ? (
           <CardFooter className="justify-end max-sm:p-2 max-sm:py-0">
             <LoadingButton
-              className="text-slate-600"
+              className="text-slate-600 dark:text-gray-400"
               loading={isCancelling}
               onClick={handleCancelScan}
               size="xs"

@@ -669,8 +669,8 @@ export function ShotMarkerEditor({
               className={cn(
                 "flex items-center gap-2 rounded px-3 py-2 font-medium text-sm transition-colors",
                 selectedIndex === index
-                  ? "bg-blue-500/20 text-blue-600"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-blue-500/20 text-blue-600 dark:bg-blue-500/25 dark:text-blue-300"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-muted/60 dark:text-muted-foreground/90 dark:hover:bg-muted/70"
               )}
               key={shot.id}
               onClick={() => {
@@ -685,7 +685,9 @@ export function ShotMarkerEditor({
               <span
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-full font-semibold text-white text-xs",
-                  editingIndex === index ? "bg-blue-500" : "bg-gray-400"
+                  editingIndex === index
+                    ? "bg-blue-500 dark:bg-blue-400"
+                    : "bg-gray-400 dark:bg-slate-600"
                 )}
               >
                 {template

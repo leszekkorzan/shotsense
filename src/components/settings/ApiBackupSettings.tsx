@@ -503,7 +503,10 @@ export default function ApiBackupSettings() {
               {backupAuthKey?.uuid ?? "Brak danych"}
             </div>
             {backupAuthKey?.uuid && (
-              <QRCodeSVG className="mx-auto mt-2" value={backupAuthKey.uuid} />
+              <QRCodeSVG
+                className="mx-auto mt-2 box-content bg-white p-2"
+                value={backupAuthKey.uuid}
+              />
             )}
             <br />
             <div className="text-muted-foreground text-xs uppercase tracking-wide">

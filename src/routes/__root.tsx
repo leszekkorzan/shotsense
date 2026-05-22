@@ -48,7 +48,7 @@ const RootLayout = () => {
 
   return (
     <SidebarProvider>
-      <AppSidebar pathname={pathname} />
+      <AppSidebar />
       {showOnboarding && <Onboarding />}
       {allowWorkerRegistration && <PWA />}
       <SidebarInset>

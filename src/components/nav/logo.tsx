@@ -18,7 +18,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
         className="flex items-center gap-2 rounded-md py-1.5 text-left"
         to="/"
       >
-        <div className="flex aspect-square size-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+        <div className="flex aspect-square size-7 items-center justify-center rounded-md border border-sidebar-border/70 bg-sidebar-accent text-sidebar-accent-foreground">
           <Crosshair className="size-4" />
         </div>
         <div className="grid flex-1 leading-tight">
@@ -37,7 +37,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             size="lg"
           >
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg border border-sidebar-border/70 bg-sidebar-accent text-sidebar-accent-foreground">
               <Crosshair />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">

@@ -11,19 +11,14 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "./logo";
 
-export function AppSidebar({
-  pathname,
-  ...props
-}: React.ComponentProps<typeof Sidebar> & { pathname: string }) {
-  const navMain = NAV_ITEMS;
-
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain items={NAV_ITEMS} />
       </SidebarContent>
       {/* <SidebarFooter>
         <NavUser user={data.user} />
