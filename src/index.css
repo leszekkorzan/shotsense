@@ -122,10 +122,17 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    color-scheme: light;
+    @apply min-h-full bg-background font-sans;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply min-h-dvh bg-background text-foreground;
+  }
+  #root {
+    @apply min-h-dvh bg-background;
   }
 }

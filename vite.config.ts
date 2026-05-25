@@ -23,6 +23,7 @@ export default defineConfig({
       pwaAssets: {
         disabled: false,
         config: true,
+        injectThemeColor: false,
       },
 
       manifest: {

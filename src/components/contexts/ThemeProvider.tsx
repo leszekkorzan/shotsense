@@ -18,7 +18,48 @@ const initialState: ThemeProviderState = {
   setTheme: () => null,
 };
 
+const themeColors: Record<Theme, string> = {
+  light: "#ffffff",
+  dark: "#0a0a0a",
+};
+
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
+
+function readStoredTheme(storageKey: string, defaultTheme: Theme) {
+  try {
+    const storedTheme = window.localStorage.getItem(storageKey);
+
+    if (storedTheme === "dark" || storedTheme === "light") {
+      return storedTheme;
+    }
+  } catch {
+    // Ignore
+  }
+
+  return defaultTheme;
+}
+
+function updateMeta(name: string, content: string) {
+  let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", name);
+    document.head.append(meta);
+  }
+
+  meta.setAttribute("content", content);
+}
+
+export function applyTheme(theme: Theme) {
+  const root = window.document.documentElement;
+  const appliedTheme = theme === "dark" ? "dark" : "light";
+
+  root.classList.remove("light", "dark");
+  root.classList.add(appliedTheme);
+  root.style.colorScheme = appliedTheme;
+
+  updateMeta("theme-color", themeColors[appliedTheme]);
+}
 
 export function ThemeProvider({
   children,
@@ -26,16 +67,12 @@ export function ThemeProvider({
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  const [theme, setTheme] = useState<Theme>(() =>
+    readStoredTheme(storageKey, defaultTheme)
   );
 
   useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove("light", "dark");
-    const appliedTheme = theme === "dark" ? "dark" : "light";
-    root.classList.add(appliedTheme);
+    applyTheme(theme);
   }, [theme]);
 
   const value = {

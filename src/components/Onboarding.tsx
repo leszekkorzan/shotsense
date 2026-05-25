@@ -102,10 +102,10 @@ export default function Onboarding() {
   return (
     <Dialog open={isOpen}>
       <DialogContent
-        className="overflow-hidden border-border/60 bg-background p-0 sm:max-w-md"
+        className="max-h-[calc(100dvh-2rem)] overflow-hidden border-border/60 bg-background p-0 sm:max-w-md"
         showCloseButton={false}
       >
-        <div className="relative isolate overflow-hidden px-6 pt-7 pb-6">
+        <div className="relative isolate flex max-h-[calc(100dvh-2rem)] flex-col overflow-y-auto overflow-x-hidden overscroll-contain px-6 pt-7 pb-6">
           <div className="pointer-events-none absolute top-6 -right-10 size-28 rounded-full bg-primary/10 blur-3xl" />
 
           <DialogHeader className="relative gap-4 text-center">
